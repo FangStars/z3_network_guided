@@ -120,6 +120,24 @@ namespace {
         void next_case_split(bool_var & next, lbool & phase) override {
             phase = l_undef;
             
+            // ADD_BEGIN
+            if ( gparams::get_value("guided") == "true")
+            {
+                while (!m_context.m_item_array_empty()) {
+                    if (!m_context.is_sorted)
+                    {
+                        m_context.m_item_array_sort();
+                        m_context.is_sorted = true;
+                    }
+                    next = m_context.m_item_array_next();
+                    if (m_context.get_assignment(next) == l_undef)
+                    {
+                        return;
+                    }
+                }
+            }
+            // ADD_END
+
             if (m_context.get_random_value() < static_cast<int>(m_params.m_random_var_freq * random_gen::max_value())) {
                 next = m_context.get_random_value() % m_context.get_num_b_internalized(); 
                 TRACE("random_split", tout << "next: " << next << " get_assignment(next): " << m_context.get_assignment(next) << "\n";);

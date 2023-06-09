@@ -41,4 +41,9 @@ void env_params::collect_param_descrs(param_descrs & d) {
     d.insert("memory_max_alloc_count", CPK_UINT, "set hard upper limit for memory allocations, if 0 then there is no limit", "0");
     d.insert("memory_high_watermark", CPK_UINT, "set high watermark for memory consumption (in bytes), if 0 then there is no limit", "0");
     d.insert("memory_high_watermark_mb", CPK_UINT, "set high watermark for memory consumption (in megabytes), if 0 then there is no limit", "0");
+    // ADD_BEGIN
+    d.insert("topology", CPK_STRING, "set directory of topology", "");  // register global param
+    d.insert("guided", CPK_BOOL, "set if guided", "false");  // register global param
+    d.insert("dst", CPK_STRING, "prefix origination", "");  // register global param
+    // ADD_END
 }

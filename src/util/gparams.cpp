@@ -23,6 +23,10 @@ Notes:
 #include "util/region.h"
 #include "util/map.h"
 
+// ADD_BEGIN
+#include "util/graph.h"
+// ADD_END
+
 static DECLARE_MUTEX(gparams_mux);
 
 extern void gparams_register_modules();
@@ -597,10 +601,45 @@ void gparams::reset() {
     g_imp->reset();
 }
 
+
+// ADD_BEGIN
+
+void readTopology(char const* fileName) {
+    std::ifstream file(fileName);
+    if (!file) {
+        std::cerr << "Error opening file: " << fileName << '\n';
+    }
+    std::string line;
+    while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string token;
+        std::vector<std::string> tokens;
+        while (std::getline(ss, token, '@')) {
+            tokens.push_back(token);
+        }
+        if (tokens.size() < 4) {
+            std::cerr << "Invalid line: " << line << '\n';
+            continue;
+        }
+
+        //std::cout << tokens[0] << tokens[1] << tokens[2] << tokens[3] << std::endl;
+        g_graph.addEdge(tokens[0], tokens[1], tokens[2], tokens[3]);
+    }
+    //std::cout << g_graph.numEdges() << std::endl;
+}
+// ADD_END
+
 void gparams::set(char const * name, char const * value) {
     TRACE("gparams", tout << "setting [" << name << "] <- '" << value << "'\n";);
     SASSERT(g_imp);
     g_imp->set(name, value);
+
+    // ADD_BEGIN
+    if (get_value("guided") == "true" && strcmp(name, "topology") == 0)
+    {
+        readTopology(value);
+    }
+    // ADD_END
 }
 
 void gparams::set(symbol const & name, char const * value) {

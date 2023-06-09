@@ -26,6 +26,11 @@ Revision History:
 
 #include <iostream>
 
+// ADD_BEGIN
+#include <regex>
+#include "util/graph.h"
+// ADD_END
+
 namespace smt {
 
     /**
@@ -914,6 +919,31 @@ namespace smt {
         apply_sort_cnstr(n, e);
     }
 
+    // __ADD_BEGIN__
+
+    static bool startsWith(const std::string& s, const std::string& prefix) {
+        return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
+    }
+
+    void stringSplit(const std::string& str, const std::string& split, vector<std::string>& res)
+    {
+        std::regex reg(split);		
+        std::sregex_token_iterator pos(str.begin(), str.end(), reg, -1);
+        decltype(pos) end;              
+        for (; pos != end; ++pos)
+        {
+            res.push_back(pos->str());
+        }
+    }
+
+    std::string DATA_FWD_FLAG = "DATA-FORWARDING";
+    std::string CONTROL_FWD_FLAG = "CONTROL-FORWARDING";
+    std::string BGP_OVERALL_FLAG = "OVERALL";
+    std::string BGP_CHOICE_FLAG = "choice";
+    std::string BGP_COMMUNITY_FLAG = "community";
+
+    // __ADD_END
+
     /**
        \brief Create a new boolean variable and associate it with n.
     */
@@ -923,7 +953,79 @@ namespace smt {
         unsigned id = n->get_id();
         bool_var v  = m_b_internalized_stack.size();
         TRACE("mk_bool_var", tout << "creating boolean variable: " << v << " for:\n" << mk_pp(n, m) << " " << n->get_id() << "\n";);
-        TRACE("mk_var_bug", tout << "mk_bool: " << v << "\n";);                
+        TRACE("mk_var_bug", tout << "mk_bool: " << v << "\n";);         
+
+        // ADD_BEGIN
+        if (gparams::get_value("guided") == "true")
+        {
+            if (!g_is_queued) {
+                g_graph.BFS(gparams::get_value("dst"));
+                g_is_queued = true;
+            }
+            bool is_literal;
+            std::string var_name = to_app(n)->get_decl()->get_name().str();
+            is_literal = startsWith(var_name, "0_");
+            if (is_literal && n->get_kind() == AST_APP) {
+                vector<std::string> element_list;
+                stringSplit(var_name, "_", element_list);
+                item_type type;
+                int distance = 100;
+                if (element_list.size() == 4) {
+                    if (element_list[1] == DATA_FWD_FLAG)
+                    {
+                        type = data_fwd;
+                        distance = g_graph.getDistanceToOrigin(element_list[2]);
+                    }
+                    else if (element_list[1] == CONTROL_FWD_FLAG) {
+                        type = control_fwd;
+                        distance = g_graph.getDistanceToOrigin(element_list[2]);
+                    }
+                    else
+                    {
+                        type = other_type;
+
+                    }
+                }
+                else if (element_list.size() == 5) {
+                    if (element_list[4] == BGP_CHOICE_FLAG)
+                    {
+                        distance = g_graph.getDistanceToOrigin(element_list[1]);
+                        type = bgp_choice;
+                    }
+                    else if (element_list[2] == BGP_OVERALL_FLAG) {
+                        distance = g_graph.getDistanceToOrigin(element_list[1]);
+                        type = bgp_overall;
+                    }
+                    else
+                    {
+                        type = other_type;
+                    }
+                }
+                else if (element_list.size() == 7) {
+                    if (element_list[5] == BGP_COMMUNITY_FLAG)
+                    {
+                        distance = g_graph.getDistanceToOrigin(element_list[1]);
+                        type = bgp_community;
+                    }
+                    else
+                    {
+                        type = other_type;
+                    }
+                }
+                else
+                {
+                    distance = g_graph.getDistanceToOrigin(element_list[1]);
+                    type = other_type;
+                }
+                add_item_entry(v, type, distance);
+                if (distance == 100)
+                {
+                    std::cout << var_name << distance << std::endl;
+                }
+            }
+        }
+        // ADD_END
+
         set_bool_var(id, v);
         m_bdata.reserve(v+1);
         m_activity.reserve(v+1);

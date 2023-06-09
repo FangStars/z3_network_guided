@@ -69,6 +69,12 @@ namespace smt {
         friend class lookahead;
         friend class parallel;
     public:
+
+        // ADD_BEGIN
+        enum item_type { data_fwd, control_fwd, bgp_overall, bgp_choice, other_type, bgp_community };
+        bool is_sorted = false;
+        // ADD_END
+
         statistics                  m_stats;
 
         std::ostream& display_last_failure(std::ostream& out) const;
@@ -168,6 +174,25 @@ namespace smt {
 #else
         u_map<bool_var>             m_expr2bool_var;
 #endif
+        // ADD_BEGIN
+        struct m_item {
+            /**
+             * v: global index
+             * type: variable type
+             * topo_index: ditance to prefix origin node
+             * */
+            int v;
+            item_type type;
+            int topo_index;
+            void set(int v, item_type type, int topo_index) {
+                this->v = v;
+                this->type = type;
+                this->topo_index = topo_index;
+            }
+        };
+        vector<m_item> m_item_array;
+        // ADD_END
+
         ptr_vector<expr>            m_bool_var2expr;         // bool_var -> expr
         signed_char_vector          m_assignment;  //!< mapping literal id -> assignment lbool
         vector<watch_list>          m_watches;     //!< per literal
@@ -247,6 +272,72 @@ namespace smt {
         //
         // -----------------------------------
     public:
+
+        // ADD_BEGIN
+
+        void add_item_entry(int v, item_type type, int topo_index) {
+            m_item item{};
+            item.set(v, type, topo_index);
+            m_item_array.push_back(item);
+        }
+
+        bool m_item_array_empty() {
+            return m_item_array.empty();
+        }
+
+        int m_item_array_next() {
+            int v = m_item_array.begin()->v;
+            m_item_array.erase(m_item_array.begin());
+            return v;
+        }
+
+        bool is_prior(m_item item1, m_item item2) {
+            //if (item1.topo_index != item2.topo_index) {
+            //    return item1.topo_index < item2.topo_index;
+            //}
+            //else {
+            //    return item1.type > item2.type;
+            //}
+            return item1.type < item2.type;
+        }
+
+        void quicksort(int first, int last) {
+            if (first > last)
+                return;
+            int i = first;
+            int j = last;
+            m_item temp = m_item_array[i];
+            while (i != j) {
+                while ((i != j) && (is_prior(temp, m_item_array[j]))) {
+                    j--;
+                }
+                if (i < j) {
+                    m_item_array[i++] = m_item_array[j];
+                }
+                while ((i != j) && (is_prior(m_item_array[i], temp))) {
+                    i++;
+                }
+                if (i < j) {
+                    m_item_array[j--] = m_item_array[i];
+                }
+            }
+            m_item_array[i] = temp;
+            quicksort(first, i - 1);
+            quicksort(i + 1, last);
+        }
+
+        void m_item_array_sort() {
+            quicksort(0, int(m_item_array.size() - 1));
+           // for (const auto &i : m_item_array) {
+           //     expr * var = m_bool_var2expr[i.v];
+           //     std::string var_name = to_app(var)->get_decl()->get_name().str();
+           //     std::cout << i.type << "\t" << var_name << "\t"<< i.topo_index << "\n";
+           //}
+        }
+
+        // ADD_END
+
+
         ast_manager & get_manager() const {
             return m;
         }

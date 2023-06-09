@@ -1,0 +1,3 @@
+# Set default behaviour, in case users don't have core.autocrlf set.
+
+src/api/dotnet/Properties/AssemblyInfo.cs text eol=crlf

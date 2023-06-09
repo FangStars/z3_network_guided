@@ -20,6 +20,7 @@ z3_add_component(util
     env_params.cpp
     fixed_bit_vector.cpp
     gparams.cpp
+    graph.cpp
     hash.cpp
     hwf.cpp
     inf_int_rational.cpp
