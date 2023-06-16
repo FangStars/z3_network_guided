@@ -52,6 +52,10 @@ Revision History:
 #include "solver/assertions/asserted_formulas.h"
 #include <tuple>
 
+// ADD_BEGIN
+#include <map>
+// ADD_END
+
 // there is a significant space overhead with allocating 1000+ contexts in
 // the case that each context only references a few expressions.
 // Using a map instead of a vector for the literals can compress space
@@ -71,7 +75,7 @@ namespace smt {
     public:
 
         // ADD_BEGIN
-        enum item_type { data_fwd, control_fwd, bgp_overall, bgp_choice, other_type, bgp_community };
+        enum item_type {connect_attr, dst_ip, bgp_permit, bgp_attr, bgp_community, overall_attr, other, data_fwd, reach_id };
         bool is_sorted = false;
         // ADD_END
 
@@ -178,19 +182,28 @@ namespace smt {
         struct m_item {
             /**
              * v: global index
+             * name: variable name
              * type: variable type
              * topo_index: ditance to prefix origin node
              * */
             int v;
+            std::string name;
             item_type type;
             int topo_index;
-            void set(int v, item_type type, int topo_index) {
+            void set(int v,std::string name, item_type type, int topo_index) {
                 this->v = v;
+                this->name = name;
                 this->type = type;
                 this->topo_index = topo_index;
             }
         };
         vector<m_item> m_item_array;
+        std::map<std::string, bool> m_dstip_candidate_map;
+        std::map<int,bool_var> m_dstip_var_map;
+        bool has_dstip_var = false;
+        bool dstip_assigned = false;
+        unsigned int m_item_index = 0;
+
         // ADD_END
 
         ptr_vector<expr>            m_bool_var2expr;         // bool_var -> expr
@@ -275,30 +288,89 @@ namespace smt {
 
         // ADD_BEGIN
 
-        void add_item_entry(int v, item_type type, int topo_index) {
+        void add_variable(sat::bool_var v,std::string var_name);
+
+        vector<std::string> parse_theory_variable(expr * n);
+
+        void init_vector() {
+            m_item_array.reserve(50000);
+;        }
+
+        void add_item_entry(int v,std::string name ,item_type type, int topo_index) {
             m_item item{};
-            item.set(v, type, topo_index);
+            item.set(v, name, type, topo_index);
             m_item_array.push_back(item);
+        }
+
+        bool assign_dstip_bool(int index) {
+            for (auto it : m_dstip_candidate_map) {
+                if (it.second == false)
+                {
+                    continue;
+                }
+                std::string dstip_candidate = it.first;
+                bool is_valid = true;
+                // get dst_ip that consistent with current assignment
+                for (int i = 31; i > 0; i--) {
+                    lbool assign_bool = get_assignment(m_dstip_var_map[i]);
+                    if (assign_bool == l_undef) {
+                        continue;
+                    }
+                    lbool i_bool = dstip_candidate[31 - i] == '0' ? l_false : l_true;
+                    if (assign_bool != i_bool) {
+                        is_valid = false;
+                        break;
+                    }
+                }
+                if (is_valid) {
+                    return dstip_candidate[(31 - index)] == '0' ? false : true;
+                }
+            }
+            std::cout << "can not find valid dst-ip" << std::endl;
+            return false;
+        }
+
+        std::string get_current_dstip() {
+            std::string dstip_bool;
+            SASSERT(m_dstip_var_map.size() == 32);
+            for (int i = 31; i >= 0; i--) {
+                lbool assign_bool = get_assignment(m_dstip_var_map[i]);
+                SASSERT(assign_bool != l_undef);
+                dstip_bool = assign_bool == l_true ? dstip_bool + "1" : dstip_bool + "0";
+            }
+            return dstip_bool;
         }
 
         bool m_item_array_empty() {
             return m_item_array.empty();
         }
 
+        bool has_unguided_var() {
+            return m_item_index < m_item_array.size();
+        }
+
         int m_item_array_next() {
-            int v = m_item_array.begin()->v;
-            m_item_array.erase(m_item_array.begin());
+            int v = m_item_array.get(m_item_index).v;
+            m_item_index++;
+            //int v = m_item_array.begin()->v;
+            //m_item_array.erase(m_item_array.begin());
             return v;
         }
 
         bool is_prior(m_item item1, m_item item2) {
-            //if (item1.topo_index != item2.topo_index) {
-            //    return item1.topo_index < item2.topo_index;
-            //}
-            //else {
-            //    return item1.type > item2.type;
-            //}
-            return item1.type < item2.type;
+            if (item1.topo_index != item2.topo_index) {
+                return item1.topo_index < item2.topo_index;
+            }
+            else {
+                if (item1.topo_index == -1)
+                {
+                    int index1 = atoi(item1.name.substr(8, item1.name.size() - 1).c_str());
+                    int index2 = atoi(item2.name.substr(8, item2.name.size() - 1).c_str());
+                    return index1 > index2;
+                }
+                return item1.type < item2.type;
+            }
+            //return item1.type < item2.type;
         }
 
         void quicksort(int first, int last) {
@@ -327,11 +399,20 @@ namespace smt {
         }
 
         void m_item_array_sort() {
+            std::cout << "variable size \t" << m_item_array.size() << "\t" << m_item_array.capacity() << "\n";
             quicksort(0, int(m_item_array.size() - 1));
+            //m_dstip_candidate_map["00001010000000000000000000000110"] = true;
+            //m_dstip_candidate_map["00001010000000000000000000001000"] = true;
+            //m_dstip_candidate_map["11001000000000100101000000000001"] = true;
+
+            m_dstip_candidate_map["00001010000000000000000100110000"] = true;
+            m_dstip_candidate_map["10000000000000000000010000000001"] = true;
+            m_dstip_candidate_map["11001000000001001000011000000001"] = true;
+
+
            // for (const auto &i : m_item_array) {
            //     expr * var = m_bool_var2expr[i.v];
-           //     std::string var_name = to_app(var)->get_decl()->get_name().str();
-           //     std::cout << i.type << "\t" << var_name << "\t"<< i.topo_index << "\n";
+           //     std::cout << i.type << "\t" << i.name << "\t"<< i.topo_index << "\n";
            //}
         }
 

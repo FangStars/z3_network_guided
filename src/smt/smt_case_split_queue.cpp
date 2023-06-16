@@ -123,7 +123,7 @@ namespace {
             // ADD_BEGIN
             if ( gparams::get_value("guided") == "true")
             {
-                while (!m_context.m_item_array_empty()) {
+                while (m_context.has_unguided_var()) {
                     if (!m_context.is_sorted)
                     {
                         m_context.m_item_array_sort();

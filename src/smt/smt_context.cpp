@@ -1887,6 +1887,35 @@ namespace smt {
 
         bool_var original_choice = var;
 
+        // ADD_BEGIN
+        if (gparams::get_value("guided") == "true") {
+            expr* decide_expr = bool_var2expr(var);
+            std::string var_name = to_app(decide_expr)->get_decl()->get_name().str();
+            if (var_name == "bit2bool")
+            {
+                int idx = to_app(decide_expr)->get_parameter(0).get_int();
+                vector<std::string> theory_varibales = parse_theory_variable(decide_expr);
+                if (theory_varibales.contains("0_dst-ip")) {
+                    if (dstip_assigned) {
+                        dstip_assigned = false;
+                    }
+                    bool dstip_bool = assign_dstip_bool(idx);
+                    if (!dstip_bool)
+                        l.neg();
+                    assign(l, b_justification::mk_axiom(), true);
+                    std::cout << "decide " << to_app(bool_var2expr(var))->get_decl()->get_name().str() << " " << get_assignment(var) << std::endl;
+                    std::cout << to_app(bool_var2expr(var))->get_parameter(0).get_int() << " " << dstip_bool << std::endl;
+                    return true;
+                }
+            }
+            if (has_dstip_var && !dstip_assigned && m_item_index >= m_dstip_var_map.size()) {
+                //m_dstip_valid_map[get_current_dstip()] = false;
+                std::cout << "assign IP: " << get_current_dstip() << std::endl;
+                dstip_assigned = true;
+            }
+        }
+        // ADD_END
+
         if (decide_user_interference(var, is_pos)) {
             if (used_queue)
                 m_case_split_queue->unassign_var_eh(original_choice);
@@ -1896,6 +1925,15 @@ namespace smt {
         if (!is_pos) l.neg();
         TRACE("decide", tout << "case split " << l << "\n" << "activity: " << get_activity(var) << "\n";);
         assign(l, b_justification::mk_axiom(), true);
+
+        // ADD_BEGIN
+        //std::cout << "decide " << to_app(bool_var2expr(var))->get_decl()->get_name().str() << " " << get_assignment(var) << std::endl;
+        //if (to_app(bool_var2expr(var))->get_decl()->get_name().str() == "bit2bool")
+        //{
+        //    std::cout << to_app(bool_var2expr(var))->get_parameter(0).get_int() << std::endl;
+        //}
+        // ADD_END
+
         return true;
     }
     
@@ -4148,6 +4186,12 @@ namespace smt {
                       tout << ", ilvl: " << get_intern_level(l.var()) << "\n"
                            << mk_pp(bool_var2expr(l.var()), m) << "\n";
                   });
+
+            // ADD_BEIGIN
+            std::cout << "level "<< new_lvl << " " << conflict_lvl << " current level" << m_item_index << std::endl << std::endl;
+            m_item_index = new_lvl;
+
+            // ADD_END
 
             if (m.has_trace_stream() && !m_is_auxiliary) {
                 m.trace_stream() << "[conflict] ";

@@ -87,5 +87,9 @@ void Graph::BFS(const std::string& startNode) {
 }
 
 int Graph::getDistanceToOrigin(const std::string& node) const {
+    //if (distanceMap.find(node) == distanceMap.end())
+    //{
+    //    return 100;
+    //}
     return distanceMap.at(node);
 }

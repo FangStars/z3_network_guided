@@ -29,6 +29,7 @@ Revision History:
 // ADD_BEGIN
 #include <regex>
 #include "util/graph.h"
+#include <set>
 // ADD_END
 
 namespace smt {
@@ -921,26 +922,94 @@ namespace smt {
 
     // __ADD_BEGIN__
 
-    static bool startsWith(const std::string& s, const std::string& prefix) {
+    static bool starts_with(const std::string& s, const std::string& prefix) {
         return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
     }
 
-    void stringSplit(const std::string& str, const std::string& split, vector<std::string>& res)
+    void string_split(const std::string& str, const std::string& split, vector<std::string>& res)
     {
-        std::regex reg(split);		
+        std::regex reg(split);
         std::sregex_token_iterator pos(str.begin(), str.end(), reg, -1);
-        decltype(pos) end;              
+        decltype(pos) end;
         for (; pos != end; ++pos)
         {
             res.push_back(pos->str());
         }
     }
 
-    std::string DATA_FWD_FLAG = "DATA-FORWARDING";
-    std::string CONTROL_FWD_FLAG = "CONTROL-FORWARDING";
-    std::string BGP_OVERALL_FLAG = "OVERALL";
-    std::string BGP_CHOICE_FLAG = "choice";
-    std::string BGP_COMMUNITY_FLAG = "community";
+    std::string OVERALL_FLAG = "OVERALL";
+    std::string CONNECTED_FLAG = "CONNECTED";
+    std::string REACH_FLAG = "reachable-id";
+
+    void  context::add_variable(bool_var v , std::string var_name) {
+        vector<std::string> element_list;
+        string_split(var_name, "_", element_list);
+        item_type type;
+        int distance = 100;
+        if (element_list.size() == 1) {
+            distance = -1;
+            type = dst_ip;
+        }
+        else if (element_list.size() == 4) {
+            if (element_list[2] != REACH_FLAG)
+            {
+                distance = g_graph.getDistanceToOrigin(element_list[2]);
+                type = data_fwd;
+            }
+            else {
+                distance = g_graph.getDistanceToOrigin(element_list[3]);
+                type = reach_id;
+            }
+        }
+        else if (element_list.size() == 5) {
+            distance = g_graph.getDistanceToOrigin(element_list[1]);
+            type = bgp_permit;
+        }
+        else if (element_list.size() == 6) {
+            distance = g_graph.getDistanceToOrigin(element_list[1]);
+            if (element_list.get(2) == CONNECTED_FLAG) {
+                type = connect_attr;
+            }
+            else if (element_list.get(2) == OVERALL_FLAG) {
+                type = overall_attr;
+            }
+            else {
+                type = bgp_attr;
+            }
+        }
+        else if (element_list.size() == 7) {
+            distance = g_graph.getDistanceToOrigin(element_list[1]);
+            type = bgp_community;
+        }
+        else
+        {
+            distance = 100;
+            type = other;
+            std::cout << "varibale not consider yet\t" << var_name << "\t" <<element_list.size() << std::endl;
+
+        }
+        add_item_entry(v,var_name, type, distance);
+    }
+
+    vector<std::string>  context::parse_theory_variable(expr* n) {
+        vector<std::string> res;
+        app* a = to_app(n);
+        int args_num = a->get_num_args();
+        if (args_num != 0) {
+            for (int i = 0; i < args_num; i++)
+            {
+                expr* e = a->get_arg(i);
+                std::string var_name = to_app(e)->get_name().str();
+                res.push_back(var_name);
+                vector<std::string> iter_res = parse_theory_variable(e);
+                for (auto& element : iter_res) {
+                    res.push_back(std::move(element));
+                }
+
+            }
+        }
+        return res;
+    }
 
     // __ADD_END
 
@@ -958,71 +1027,35 @@ namespace smt {
         // ADD_BEGIN
         if (gparams::get_value("guided") == "true")
         {
+            //init_vector();
             if (!g_is_queued) {
                 g_graph.BFS(gparams::get_value("dst"));
                 g_is_queued = true;
             }
-            bool is_literal;
-            std::string var_name = to_app(n)->get_decl()->get_name().str();
-            is_literal = startsWith(var_name, "0_");
-            if (is_literal && n->get_kind() == AST_APP) {
-                vector<std::string> element_list;
-                stringSplit(var_name, "_", element_list);
-                item_type type;
-                int distance = 100;
-                if (element_list.size() == 4) {
-                    if (element_list[1] == DATA_FWD_FLAG)
-                    {
-                        type = data_fwd;
-                        distance = g_graph.getDistanceToOrigin(element_list[2]);
-                    }
-                    else if (element_list[1] == CONTROL_FWD_FLAG) {
-                        type = control_fwd;
-                        distance = g_graph.getDistanceToOrigin(element_list[2]);
-                    }
-                    else
-                    {
-                        type = other_type;
-
-                    }
+            if (n->get_kind() == AST_APP) {
+                bool is_literal;
+                std::string var_name = to_app(n)->get_decl()->get_name().str();
+                is_literal = starts_with(var_name, "0_");
+                if (is_literal) {
+                    add_variable(v, var_name);
                 }
-                else if (element_list.size() == 5) {
-                    if (element_list[4] == BGP_CHOICE_FLAG)
+                else {
+                    if (var_name == "bit2bool" )
                     {
-                        distance = g_graph.getDistanceToOrigin(element_list[1]);
-                        type = bgp_choice;
+                        int idx = to_app(n)->get_parameter(0).get_int();
+                        vector<std::string> theory_varibales = parse_theory_variable(n);
+                        if (theory_varibales.contains("0_dst-ip")) {
+                            std::string bit2bool_name = var_name + std::to_string(idx);
+                            m_dstip_var_map[idx] = v;
+                            if (has_dstip_var == false) {
+                                has_dstip_var = true;
+                            }
+                            add_variable(v, bit2bool_name);
+                        }
                     }
-                    else if (element_list[2] == BGP_OVERALL_FLAG) {
-                        distance = g_graph.getDistanceToOrigin(element_list[1]);
-                        type = bgp_overall;
-                    }
-                    else
-                    {
-                        type = other_type;
-                    }
-                }
-                else if (element_list.size() == 7) {
-                    if (element_list[5] == BGP_COMMUNITY_FLAG)
-                    {
-                        distance = g_graph.getDistanceToOrigin(element_list[1]);
-                        type = bgp_community;
-                    }
-                    else
-                    {
-                        type = other_type;
-                    }
-                }
-                else
-                {
-                    distance = g_graph.getDistanceToOrigin(element_list[1]);
-                    type = other_type;
-                }
-                add_item_entry(v, type, distance);
-                if (distance == 100)
-                {
-                    std::cout << var_name << distance << std::endl;
                 }
             }
+
         }
         // ADD_END
 
