@@ -1927,7 +1927,7 @@ namespace smt {
         assign(l, b_justification::mk_axiom(), true);
 
         // ADD_BEGIN
-        //std::cout << "decide " << to_app(bool_var2expr(var))->get_decl()->get_name().str() << " " << get_assignment(var) << std::endl;
+        std::cout << "decide " << to_app(bool_var2expr(var))->get_decl()->get_name().str() << " " << get_assignment(var) << std::endl;
         //if (to_app(bool_var2expr(var))->get_decl()->get_name().str() == "bit2bool")
         //{
         //    std::cout << to_app(bool_var2expr(var))->get_parameter(0).get_int() << std::endl;
@@ -4188,9 +4188,12 @@ namespace smt {
                   });
 
             // ADD_BEIGIN
+            //for (unsigned i = 0; i < num_lits; i++) {
+            //    literal l = lits[i];
+            //    std::cout << "conflic " << to_app(bool_var2expr(l.var()))->get_decl()->get_name().str() << " " << get_assignment(l.var()) << std::endl;
+            //}
             std::cout << "level "<< new_lvl << " " << conflict_lvl << " current level" << m_item_index << std::endl << std::endl;
             m_item_index = new_lvl;
-
             // ADD_END
 
             if (m.has_trace_stream() && !m_is_auxiliary) {

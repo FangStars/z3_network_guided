@@ -100,12 +100,3 @@ CMakeSettings.json
 .DS_Store
 dbg/**
 *.wsp
-/.github
-/cmake
-/contrib
-/doc
-/docker
-/examples
-/noarch
-/resources
-/scripts

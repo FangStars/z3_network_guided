@@ -939,6 +939,8 @@ namespace smt {
 
     std::string OVERALL_FLAG = "OVERALL";
     std::string CONNECTED_FLAG = "CONNECTED";
+    std::string BGP_IMPORT_FLAG = "BGP_IMPORT";
+    std::string BGP_EXPORT_FLAG = "BGP_EXPORT";
     std::string REACH_FLAG = "reachable-id";
 
     void  context::add_variable(bool_var v , std::string var_name) {
@@ -963,7 +965,21 @@ namespace smt {
         }
         else if (element_list.size() == 5) {
             distance = g_graph.getDistanceToOrigin(element_list[1]);
-            type = bgp_permit;
+            if (element_list.get(2) == CONNECTED_FLAG) {
+                type = connect_permit;
+            }
+            else if (element_list.get(2) == OVERALL_FLAG) {
+                type = overall_permit;
+            }
+            else if (element_list.get(2) == BGP_IMPORT_FLAG) {
+                type = bgp_import_permit;
+            }
+            else if (element_list.get(2) == BGP_EXPORT_FLAG) {
+                type = bgp_export_permit;
+            }
+            else {
+                type = bgp_attr;
+            }
         }
         else if (element_list.size() == 6) {
             distance = g_graph.getDistanceToOrigin(element_list[1]);
@@ -988,6 +1004,8 @@ namespace smt {
             std::cout << "varibale not consider yet\t" << var_name << "\t" <<element_list.size() << std::endl;
 
         }
+        if (type == bgp_community)
+            return;
         add_item_entry(v,var_name, type, distance);
     }
 
