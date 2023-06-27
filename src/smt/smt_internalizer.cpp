@@ -920,7 +920,7 @@ namespace smt {
         apply_sort_cnstr(n, e);
     }
 
-    // __ADD_BEGIN__
+    // ADD_BEGIN__
 
     static bool starts_with(const std::string& s, const std::string& prefix) {
         return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
@@ -939,8 +939,12 @@ namespace smt {
 
     std::string OVERALL_FLAG = "OVERALL";
     std::string CONNECTED_FLAG = "CONNECTED";
-    std::string BGP_IMPORT_FLAG = "BGP_IMPORT";
-    std::string BGP_EXPORT_FLAG = "BGP_EXPORT";
+    std::string BGP_FLAG = "BGP";
+    std::string BEST_FLAG = "BEST";
+    std::string IMPORT_FLAG = "IMPORT";
+    std::string SINGLE_IMPORT_FLAG = "SINGLE-IMPORT";
+    std::string EXPORT_FLAG = "EXPORT";
+    std::string SINGLE_EXPORT_FLAG = "SINGLE-EXPORT";
     std::string REACH_FLAG = "reachable-id";
 
     void  context::add_variable(bool_var v , std::string var_name) {
@@ -963,7 +967,7 @@ namespace smt {
                 type = reach_id;
             }
         }
-        else if (element_list.size() == 5) {
+        else if (element_list.size() == 6) {
             distance = g_graph.getDistanceToOrigin(element_list[1]);
             if (element_list.get(2) == CONNECTED_FLAG) {
                 type = connect_permit;
@@ -971,35 +975,28 @@ namespace smt {
             else if (element_list.get(2) == OVERALL_FLAG) {
                 type = overall_permit;
             }
-            else if (element_list.get(2) == BGP_IMPORT_FLAG) {
-                type = bgp_import_permit;
-            }
-            else if (element_list.get(2) == BGP_EXPORT_FLAG) {
-                type = bgp_export_permit;
-            }
-            else {
-                type = bgp_attr;
-            }
-        }
-        else if (element_list.size() == 6) {
-            distance = g_graph.getDistanceToOrigin(element_list[1]);
-            if (element_list.get(2) == CONNECTED_FLAG) {
-                type = connect_attr;
-            }
-            else if (element_list.get(2) == OVERALL_FLAG) {
-                type = overall_attr;
+            else if (element_list.get(2) == BGP_FLAG) {
+                if (element_list.get(3) == IMPORT_FLAG || element_list.get(3) == SINGLE_IMPORT_FLAG) {
+                    type = bgp_import_permit;
+                }
+                else if (element_list.get(3) == EXPORT_FLAG || element_list.get(3) == SINGLE_EXPORT_FLAG) {
+                    type = bgp_export_permit;
+                }
+                else if(  element_list.get(3) == BEST_FLAG)
+                {
+                    type = bgp_overall_permit;
+                }
             }
             else {
-                type = bgp_attr;
+                std::cout << "varibale not consider yet\t" << var_name << "\t" << element_list.size() << std::endl;
             }
         }
         else if (element_list.size() == 7) {
-            distance = g_graph.getDistanceToOrigin(element_list[1]);
+            //distance = g_graph.getDistanceToOrigin(element_list[1]);
             type = bgp_community;
         }
         else
         {
-            distance = 100;
             type = other;
             std::cout << "varibale not consider yet\t" << var_name << "\t" <<element_list.size() << std::endl;
 

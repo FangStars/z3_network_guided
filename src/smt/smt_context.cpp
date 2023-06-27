@@ -1908,11 +1908,13 @@ namespace smt {
                     return true;
                 }
             }
-            if (has_dstip_var && !dstip_assigned && m_item_index >= m_dstip_var_map.size()) {
+#ifdef SHOW_DPLL
+            if (has_dstip_var && !dstip_assigned && m_item_index > m_dstip_var_map.size()) {
                 //m_dstip_valid_map[get_current_dstip()] = false;
                 std::cout << "assign IP: " << get_current_dstip() << std::endl;
                 dstip_assigned = true;
             }
+#endif
         }
         // ADD_END
 
@@ -1927,11 +1929,13 @@ namespace smt {
         assign(l, b_justification::mk_axiom(), true);
 
         // ADD_BEGIN
+#ifdef SHOW_DPLL
         std::cout << "decide " << to_app(bool_var2expr(var))->get_decl()->get_name().str() << " " << get_assignment(var) << std::endl;
         //if (to_app(bool_var2expr(var))->get_decl()->get_name().str() == "bit2bool")
         //{
         //    std::cout << to_app(bool_var2expr(var))->get_parameter(0).get_int() << std::endl;
         //}
+#endif
         // ADD_END
 
         return true;
@@ -4187,13 +4191,17 @@ namespace smt {
                            << mk_pp(bool_var2expr(l.var()), m) << "\n";
                   });
 
-            // ADD_BEIGIN
+            // ADD_BEGIN
+#ifdef SHOW_DPLL
             //for (unsigned i = 0; i < num_lits; i++) {
             //    literal l = lits[i];
             //    std::cout << "conflic " << to_app(bool_var2expr(l.var()))->get_decl()->get_name().str() << " " << get_assignment(l.var()) << std::endl;
             //}
-            std::cout << "level "<< new_lvl << " " << conflict_lvl << " current level" << m_item_index << std::endl << std::endl;
-            m_item_index = new_lvl;
+            std::cout << "level " << new_lvl << " " << conflict_lvl << " current level" << m_item_index << std::endl << std::endl;
+#endif
+            if (gparams::get_value("guided") == "true") {
+                m_item_index = has_dstip_var && (new_lvl <= 31) ? 0 : new_lvl;
+            }
             // ADD_END
 
             if (m.has_trace_stream() && !m_is_auxiliary) {

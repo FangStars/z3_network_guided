@@ -55,6 +55,7 @@ Revision History:
 // ADD_BEGIN
 #include <map>
 #include<time.h>
+//#define SHOW_DPLL 1
 // ADD_END
 
 // there is a significant space overhead with allocating 1000+ contexts in
@@ -76,7 +77,7 @@ namespace smt {
     public:
 
         // ADD_BEGIN
-        enum item_type {connect_permit, connect_attr, dst_ip, bgp_import_permit, bgp_attr, bgp_community, overall_attr, overall_permit, bgp_export_permit ,other, data_fwd, reach_id };
+        enum item_type {connect_permit, dst_ip, bgp_import_permit, bgp_community,bgp_overall_permit, overall_permit, bgp_export_permit ,other, data_fwd, reach_id };
         bool is_sorted = false;
         // ADD_END
 
@@ -400,12 +401,14 @@ namespace smt {
         }
 
         void m_item_array_sort() {
-            std::cout << "variable size \t" << m_item_array.size() << "\t" << m_item_array.capacity() << "\n";
             clock_t startTime, endTime;
             startTime = clock();
             quicksort(0, int(m_item_array.size() - 1));
             endTime = clock();
+#ifdef SHOW_DPLL
+            std::cout << "variable size \t" << m_item_array.size() << "\t" << m_item_array.capacity() << "\n";
             std::cout << "Array Sort Time : " << (double)(endTime - startTime) << "ms" << std::endl;
+#endif 
             //m_dstip_candidate_map["00001010000000000000000000000110"] = true;
             //m_dstip_candidate_map["00001010000000000000000000001000"] = true;
             //m_dstip_candidate_map["11001000000000100101000000000001"] = true;

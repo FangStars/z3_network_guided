@@ -1,3 +1,4 @@
+// ADD_BEGIN
 #pragma once
 
 #include <string>
@@ -65,3 +66,5 @@ private:
 
 extern Graph g_graph;
 extern bool g_is_queued;
+
+// ADD_END

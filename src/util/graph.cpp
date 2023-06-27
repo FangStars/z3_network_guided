@@ -1,3 +1,4 @@
+// ADD_BEGIN
 #include "graph.h"
 
 Graph g_graph;
@@ -93,3 +94,5 @@ int Graph::getDistanceToOrigin(const std::string& node) const {
     //}
     return distanceMap.at(node);
 }
+
+// ADD_END
