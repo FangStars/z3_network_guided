@@ -47,9 +47,11 @@ public:
 
     std::vector<Neighbor> getNeighborList(const std::string& node) const;
 
+    void init(const std::string& topologyPath);
+
     void BFS(const std::string& startNode);
 
-    int getDistanceToOrigin(const std::string& node) const;
+    int getDistanceToOrigin(const std::string& node, const std::string literal) const;
 
 
 private:
@@ -66,5 +68,6 @@ private:
 
 extern Graph g_graph;
 extern bool g_is_queued;
+extern bool g_is_init;
 
 // ADD_END

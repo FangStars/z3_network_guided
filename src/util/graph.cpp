@@ -1,8 +1,16 @@
 // ADD_BEGIN
 #include "graph.h"
+#include "z3_exception.h"
+#include <algorithm>
+#include <fstream>
+#include <string>
+#include <iostream>
+#include <sstream>
+
 
 Graph g_graph;
 bool g_is_queued = false;
+bool g_is_init = false;
 
 void Graph::addNode(const std::string& node) {
     if (!hasNode(node)) {
@@ -63,6 +71,30 @@ std::vector<Neighbor> Graph::getNeighborList(const std::string& node) const {
     return neighbors;
 }
 
+void Graph::init(const std::string& topologyPath)
+{
+    std::ifstream file(topologyPath);
+    if (!file) {
+        throw default_exception("Error opening topology file: " + topologyPath);
+    }
+    std::string line;
+    while (std::getline(file, line)) {
+        std::stringstream ss(line);
+        std::string token;
+        std::vector<std::string> tokens;
+        while (std::getline(ss, token, '@')) {
+            tokens.push_back(token);
+        }
+        if (tokens.size() < 4) {
+            std::cerr << "Invalid line: " << line << '\n';
+            continue;
+        }
+
+        addEdge(tokens[0], tokens[1], tokens[2], tokens[3]);
+    }
+    //std::cout << g_graph.numEdges() << std::endl;
+}
+
 void Graph::BFS(const std::string& startNode) {
     std::queue <std::string> q;
     std::vector<std::string> visited;
@@ -87,12 +119,20 @@ void Graph::BFS(const std::string& startNode) {
     }
 }
 
-int Graph::getDistanceToOrigin(const std::string& node) const {
+int Graph::getDistanceToOrigin(const std::string& node, const std::string litera) const {
     //if (distanceMap.find(node) == distanceMap.end())
     //{
     //    return 100;
     //}
-    return distanceMap.at(node);
+    int res;
+    try {
+        res = distanceMap.at(node);
+    }
+    catch (std::out_of_range& exc) {
+        int size = distanceMap.size();
+        throw default_exception("Exception at distanceMap: "+ node + litera);
+    }
+    return res ;
 }
 
 // ADD_END
