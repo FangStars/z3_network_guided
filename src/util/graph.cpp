@@ -1,6 +1,7 @@
 // ADD_BEGIN
 #include "graph.h"
 #include "z3_exception.h"
+#include "util/gparams.h"
 #include <algorithm>
 #include <fstream>
 #include <string>
@@ -103,12 +104,13 @@ void Graph::BFS(const std::string& startNode) {
     distanceMap[startNode] = 0;
     int distance = 0;
 
+    // node distance
     while (!q.empty()) {
         std::string currNode = q.front();
         q.pop();
 
         for (const auto& neighbor : adjList[currNode]) {
-            auto nextNode = neighbor.dstNode;
+            std::string nextNode = neighbor.dstNode;
             
             if (std::find(visited.begin(), visited.end(), nextNode) == visited.end()) {
                 q.push(nextNode);
@@ -117,21 +119,55 @@ void Graph::BFS(const std::string& startNode) {
             }
         }
     }
-}
 
-int Graph::getDistanceToOrigin(const std::string& node, const std::string litera) const {
-    //if (distanceMap.find(node) == distanceMap.end())
-    //{
-    //    return 100;
-    //}
-    int res;
+    // port distance
     try {
-        res = distanceMap.at(node);
+        for (const auto& [key, value] : adjList) {
+            int currentNodeDistance = distanceMap.at(key);
+            for (auto& neighbor : value) {
+                int adjNodeDistance = distanceMap.at(neighbor.dstNode);
+                if (currentNodeDistance > adjNodeDistance)
+                {
+                    priorerSet.insert(key + "_" + neighbor.srcPort);
+                }
+            }
+        }
     }
     catch (std::out_of_range& exc) {
-        int size = distanceMap.size();
-        throw default_exception("Exception at distanceMap: "+ node + litera);
+        throw default_exception("Exception at distanceNodeMap");
     }
+}
+
+double Graph::getDistanceToOrigin(const std::string& node, const std::string& port, const std::string& varName) const {
+    int Nodedistance;
+    double res;
+    
+    if (gparams::get_value("dst_port") != "" && node == gparams::get_value("dst") && port == gparams::get_value("dst_port")) {
+        return 0.1;
+    }
+
+    try {
+        Nodedistance = distanceMap.at(node);
+
+    }
+    catch (std::out_of_range& exc) {
+        throw default_exception("Exception at distanceNodeMap: " + node + varName);
+    }
+
+    res = Nodedistance + 0.2;
+
+    if (port == "")
+    {
+        return res;
+    }
+    else
+    {
+        if (priorerSet.find(node + "_" + port) != priorerSet.end())
+        {
+            res = Nodedistance + 0.1;
+        }
+    }
+
     return res ;
 }
 

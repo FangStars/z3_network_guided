@@ -952,7 +952,7 @@ namespace smt {
         vector<std::string> element_list;
         string_split(var_name, "_", element_list);
         item_type type;
-        int distance = 100;
+        double distance = 100;
         if (element_list.size() == 1) {
             distance = -1;
             type = dst_ip;
@@ -960,32 +960,36 @@ namespace smt {
         else if (element_list.size() == 4) {
             if (element_list[2] == REACH_FLAG1 || element_list[2] == REACH_FLAG2)
             {
-                distance = g_graph.getDistanceToOrigin(element_list[3],var_name);
+                distance = g_graph.getDistanceToOrigin(element_list[3],"", var_name);
                 type = reach_id;
             }
             else {
-                distance = g_graph.getDistanceToOrigin(element_list[2], var_name);
+                distance = g_graph.getDistanceToOrigin(element_list[2], element_list[3], var_name);
                 type = data_fwd;
             }
         }
         else if (element_list.size() == 6) {
-            distance = g_graph.getDistanceToOrigin(element_list[1], var_name);
             if (element_list.get(2) == CONNECTED_FLAG) {
                 type = connect_permit;
+                distance = g_graph.getDistanceToOrigin(element_list[1], element_list[4], var_name);
             }
             else if (element_list.get(2) == OVERALL_FLAG) {
                 type = overall_permit;
+                distance = g_graph.getDistanceToOrigin(element_list[1],"", var_name);
             }
             else if (element_list.get(2) == BGP_FLAG) {
                 if (element_list.get(3) == IMPORT_FLAG || element_list.get(3) == SINGLE_IMPORT_FLAG) {
                     type = bgp_import_permit;
+                    distance = g_graph.getDistanceToOrigin(element_list[1], element_list[4], var_name);
                 }
                 else if (element_list.get(3) == EXPORT_FLAG || element_list.get(3) == SINGLE_EXPORT_FLAG) {
                     type = bgp_export_permit;
+                    distance = g_graph.getDistanceToOrigin(element_list[1], "", var_name);
                 }
                 else if(  element_list.get(3) == BEST_FLAG)
                 {
                     type = bgp_overall_permit;
+                    distance = g_graph.getDistanceToOrigin(element_list[1], "", var_name);
                 }
             }
             else {
@@ -1005,6 +1009,13 @@ namespace smt {
         }
         if (type == bgp_community)
             return;
+
+        if ((std::fmod(distance, 1.0) - 0.1) < 1e-6) {
+            m_assginment_map[v] = true;
+        }
+        else {
+            m_assginment_map[v] = false;
+        }
         add_item_entry(v,var_name, type, distance);
     }
 
@@ -1039,7 +1050,7 @@ namespace smt {
         unsigned id = n->get_id();
         bool_var v  = m_b_internalized_stack.size();
         TRACE("mk_bool_var", tout << "creating boolean variable: " << v << " for:\n" << mk_pp(n, m) << " " << n->get_id() << "\n";);
-        TRACE("mk_var_bug", tout << "mk_bool: " << v << "\n";);         
+        TRACE("mk_var_bug", tout << "mk_bool: " << v << "\n";);  
 
         // ADD_BEGIN
         if (gparams::get_value("guided") == "true")

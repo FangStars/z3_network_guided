@@ -1889,25 +1889,35 @@ namespace smt {
 
         // ADD_BEGIN
         if (gparams::get_value("guided") == "true") {
-            expr* decide_expr = bool_var2expr(var);
-            std::string var_name = to_app(decide_expr)->get_decl()->get_name().str();
-            if (var_name == "bit2bool")
-            {
-                int idx = to_app(decide_expr)->get_parameter(0).get_int();
-                vector<std::string> theory_varibales = parse_theory_variable(decide_expr);
-                if (theory_varibales.contains("0_dst-ip")) {
-                    if (dstip_assigned) {
-                        dstip_assigned = false;
-                    }
-                    bool dstip_bool = assign_dstip_bool(idx);
-                    if (!dstip_bool)
-                        l.neg();
-                    assign(l, b_justification::mk_axiom(), true);
-                    std::cout << "decide " << to_app(bool_var2expr(var))->get_decl()->get_name().str() << " " << get_assignment(var) << std::endl;
-                    std::cout << to_app(bool_var2expr(var))->get_parameter(0).get_int() << " " << dstip_bool << std::endl;
-                    return true;
+            if (m_item_index < m_item_array.size() && std::stoi(gparams::get_value("network_type")) == 1) {
+                if (m_assginment_map[var] == false) {
+                    l.neg();
                 }
+                assign(l, b_justification::mk_axiom(), true);
+                //std::cout << "decide " << to_app(bool_var2expr(var))->get_decl()->get_name().str() << " " << get_assignment(var) << std::endl;
+                return true;
             }
+            //if (has_dstip_var)
+            //{
+            //    expr* decide_expr = bool_var2expr(var);
+            //    std::string var_name = to_app(decide_expr)->get_decl()->get_name().str();
+            //    if (var_name == "bit2bool") {
+            //        int idx = to_app(decide_expr)->get_parameter(0).get_int();
+            //        vector<std::string> theory_varibales = parse_theory_variable(decide_expr);
+            //        if (theory_varibales.contains("0_dst-ip")) {
+            //            if (dstip_assigned) {
+            //                dstip_assigned = false;
+            //            }
+            //            bool dstip_bool = assign_dstip_bool(idx);
+            //            if (!dstip_bool)
+            //                l.neg();
+            //            assign(l, b_justification::mk_axiom(), true);
+            //            std::cout << "decide " << to_app(bool_var2expr(var))->get_decl()->get_name().str() << " " << get_assignment(var) << std::endl;
+            //            std::cout << to_app(bool_var2expr(var))->get_parameter(0).get_int() << " " << dstip_bool << std::endl;
+            //            return true;
+            //        }
+            //    }
+            //}
 #ifdef SHOW_DPLL
             if (has_dstip_var && !dstip_assigned && m_item_index > m_dstip_var_map.size()) {
                 //m_dstip_valid_map[get_current_dstip()] = false;
@@ -4200,7 +4210,7 @@ namespace smt {
             std::cout << "level " << new_lvl << " " << conflict_lvl << " current level" << m_item_index << std::endl << std::endl;
 #endif
             if (gparams::get_value("guided") == "true") {
-                m_item_index = has_dstip_var && (new_lvl <= 31) ? 0 : new_lvl;
+                m_item_index = (has_dstip_var && (new_lvl <= 31)) ? 0 : new_lvl;
             }
             // ADD_END
 

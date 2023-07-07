@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <vector>
 #include <queue>
+#include <unordered_set>
 
 struct Edge {
     std::string node1;
@@ -51,7 +52,7 @@ public:
 
     void BFS(const std::string& startNode);
 
-    int getDistanceToOrigin(const std::string& node, const std::string literal) const;
+    double getDistanceToOrigin(const std::string& node,const std::string& port, const std::string& literal) const;
 
 
 private:
@@ -59,7 +60,7 @@ private:
 
     std::unordered_map<std::string, int> distanceMap;
 
-    //std::unordered_map<std::pair<std::string, std::string>, int> distanceMap;
+    std::unordered_set <std::string> priorerSet;
 
     int nodesNum = 0;
 

@@ -55,6 +55,7 @@ Revision History:
 // ADD_BEGIN
 #include <map>
 #include<time.h>
+#include <cmath>
 //#define SHOW_DPLL 1
 // ADD_END
 
@@ -188,11 +189,11 @@ namespace smt {
              * type: variable type
              * topo_index: ditance to prefix origin node
              * */
-            int v;
+            bool_var v;
             std::string name;
             item_type type;
-            int topo_index;
-            void set(int v,std::string name, item_type type, int topo_index) {
+            double topo_index;
+            void set(bool_var v,std::string name, item_type type, double topo_index) {
                 this->v = v;
                 this->name = name;
                 this->type = type;
@@ -202,6 +203,7 @@ namespace smt {
         vector<m_item> m_item_array;
         std::map<std::string, bool> m_dstip_candidate_map;
         std::map<int,bool_var> m_dstip_var_map;
+        std::unordered_map<bool_var, bool> m_assginment_map;
         bool has_dstip_var = false;
         bool dstip_assigned = false;
         unsigned int m_item_index = 0;
@@ -294,11 +296,7 @@ namespace smt {
 
         vector<std::string> parse_theory_variable(expr * n);
 
-        void init_vector() {
-            m_item_array.reserve(50000);
-;        }
-
-        void add_item_entry(int v,std::string name ,item_type type, int topo_index) {
+        void add_item_entry(bool_var v,std::string name ,item_type type, double topo_index) {
             m_item item{};
             item.set(v, name, type, topo_index);
             m_item_array.push_back(item);
@@ -364,6 +362,7 @@ namespace smt {
                 return item1.topo_index < item2.topo_index;
             }
             else {
+                // dst-ip
                 if (item1.topo_index == -1)
                 {
                     int index1 = atoi(item1.name.substr(8, item1.name.size() - 1).c_str());
@@ -405,10 +404,12 @@ namespace smt {
             startTime = clock();
             quicksort(0, int(m_item_array.size() - 1));
             endTime = clock();
-#ifdef SHOW_DPLL
-            std::cout << "variable size \t" << m_item_array.size() << "\t" << m_item_array.capacity() << "\n";
-            std::cout << "Array Sort Time : " << (double)(endTime - startTime) << "ms" << std::endl;
-#endif 
+            //std::cout << "Array Sort Time : " << (double)(endTime - startTime) << "ms" << std::endl;
+
+            for (const auto& i : m_item_array) {
+                std::cout << i.type << "\t" << i.name << "\t" << i.topo_index << "\n";
+            }
+
             //m_dstip_candidate_map["00001010000000000000000000000110"] = true;
             //m_dstip_candidate_map["00001010000000000000000000001000"] = true;
             //m_dstip_candidate_map["11001000000000100101000000000001"] = true;
@@ -417,11 +418,10 @@ namespace smt {
             //m_dstip_candidate_map["10000000000000000000010000000001"] = true;
             //m_dstip_candidate_map["11001000000001001000011000000001"] = true;
 
-
-           // for (const auto &i : m_item_array) {
-           //     expr * var = m_bool_var2expr[i.v];
-           //     std::cout << i.type << "\t" << i.name << "\t"<< i.topo_index << "\n";
-           //}
+#ifdef SHOW_DPLL
+            std::cout << "variable size \t" << m_item_array.size() << "\t" << m_item_array.capacity() << "\n";
+            std::cout << "Array Sort Time : " << (double)(endTime - startTime) << "ms" << std::endl;
+#endif 
         }
 
         // ADD_END

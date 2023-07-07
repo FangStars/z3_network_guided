@@ -43,7 +43,9 @@ void env_params::collect_param_descrs(param_descrs & d) {
     d.insert("memory_high_watermark_mb", CPK_UINT, "set high watermark for memory consumption (in megabytes), if 0 then there is no limit", "0");
     // ADD_BEGIN
     d.insert("topology", CPK_STRING, "set directory of topology", "");  // register global param
-    d.insert("guided", CPK_BOOL, "set if guided", "false");  // register global param
-    d.insert("dst", CPK_STRING, "prefix origination", "");  // register global param
+    d.insert("guided", CPK_BOOL, "set if guided", "false"); 
+    d.insert("dst", CPK_STRING, "prefix origination", "");  
+    d.insert("dst_port", CPK_STRING, "prefix origination port", "");
+    d.insert("network_type", CPK_NUMERAL, "network type, internet or fattree", "0"); // 0: internet, 1: Fattree
     // ADD_END
 }
