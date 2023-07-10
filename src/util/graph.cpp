@@ -96,6 +96,14 @@ void Graph::init(const std::string& topologyPath)
     //std::cout << g_graph.numEdges() << std::endl;
 }
 
+void Graph::clear() {
+    adjList.clear();
+    distanceMap.clear();
+    priorerSet.clear();
+    nodesNum = 0;
+    edgesNum = 0;
+}
+
 void Graph::BFS(const std::string& startNode) {
     std::queue <std::string> q;
     std::vector<std::string> visited;

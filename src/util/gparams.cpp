@@ -599,6 +599,13 @@ gparams::imp * gparams::g_imp = nullptr;
 void gparams::reset() {
     SASSERT(g_imp);
     g_imp->reset();
+
+    // ADD_BEGIN
+    g_graph.clear();
+    g_is_queued = false;
+    g_is_init = false;
+    std::cout << "reset" << std::endl;
+    // ADD_END
 }
 
 void gparams::set(char const * name, char const * value) {

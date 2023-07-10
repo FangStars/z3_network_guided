@@ -406,9 +406,9 @@ namespace smt {
             endTime = clock();
             //std::cout << "Array Sort Time : " << (double)(endTime - startTime) << "ms" << std::endl;
 
-            for (const auto& i : m_item_array) {
-                std::cout << i.type << "\t" << i.name << "\t" << i.topo_index << "\n";
-            }
+            //for (const auto& i : m_item_array) {
+            //    std::cout << i.type << "\t" << i.name << "\t" << i.topo_index << "\n";
+            //}
 
             //m_dstip_candidate_map["00001010000000000000000000000110"] = true;
             //m_dstip_candidate_map["00001010000000000000000000001000"] = true;

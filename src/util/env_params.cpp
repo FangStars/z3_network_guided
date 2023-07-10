@@ -46,6 +46,6 @@ void env_params::collect_param_descrs(param_descrs & d) {
     d.insert("guided", CPK_BOOL, "set if guided", "false"); 
     d.insert("dst", CPK_STRING, "prefix origination", "");  
     d.insert("dst_port", CPK_STRING, "prefix origination port", "");
-    d.insert("network_type", CPK_NUMERAL, "network type, internet or fattree", "0"); // 0: internet, 1: Fattree
+    d.insert("network_type", CPK_STRING, "network type, internet or fattree", "0"); // 0: internet, 1: Fattree
     // ADD_END
 }

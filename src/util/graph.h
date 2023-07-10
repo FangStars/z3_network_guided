@@ -50,6 +50,8 @@ public:
 
     void init(const std::string& topologyPath);
 
+    void clear();
+
     void BFS(const std::string& startNode);
 
     double getDistanceToOrigin(const std::string& node,const std::string& port, const std::string& literal) const;
