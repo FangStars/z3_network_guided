@@ -106,11 +106,10 @@ void Graph::clear() {
 
 void Graph::BFS(const std::string& startNode) {
     std::queue <std::string> q;
-    std::vector<std::string> visited;
+    std::unordered_set<std::string> visited;
 
     q.push(startNode);
     distanceMap[startNode] = 0;
-    int distance = 0;
 
     // node distance
     while (!q.empty()) {
@@ -120,9 +119,9 @@ void Graph::BFS(const std::string& startNode) {
         for (const auto& neighbor : adjList[currNode]) {
             std::string nextNode = neighbor.dstNode;
             
-            if (std::find(visited.begin(), visited.end(), nextNode) == visited.end()) {
+            if (visited.find(nextNode) == visited.end()) {
                 q.push(nextNode);
-                visited.push_back(currNode);
+                visited.insert(currNode);
                 distanceMap[nextNode] = distanceMap[currNode] + 1;
             }
         }
@@ -144,6 +143,7 @@ void Graph::BFS(const std::string& startNode) {
     catch (std::out_of_range& exc) {
         throw default_exception("Exception at distanceNodeMap");
     }
+    adjList.clear();
 }
 
 double Graph::getDistanceToOrigin(const std::string& node, const std::string& port, const std::string& varName) const {

@@ -1889,7 +1889,7 @@ namespace smt {
 
         // ADD_BEGIN
         if (gparams::get_value("guided") == "true") {
-            if (m_item_index < m_item_array.size() && std::stoi(gparams::get_value("network_type")) == 1) {
+            if (m_item_index < m_item_array.size()) {
                 if (m_assginment_map[var] == false) {
                     l.neg();
                 }

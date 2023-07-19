@@ -30,6 +30,7 @@ Revision History:
 #include <regex>
 #include "util/graph.h"
 #include <set>
+#include<time.h>
 // ADD_END
 
 namespace smt {
@@ -922,6 +923,8 @@ namespace smt {
 
     // ADD_BEGIN__
 
+    bool is_smtfile_init = false; // init graph after smt file has been read, or the init process will be very slow.
+
     static bool starts_with(const std::string& s, const std::string& prefix) {
         return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
     }
@@ -1055,14 +1058,19 @@ namespace smt {
         // ADD_BEGIN
         if (gparams::get_value("guided") == "true")
         {
-            if (!g_is_queued) {
+            if (!g_is_queued && is_smtfile_init) {
+                clock_t startTime, endTime;
+                startTime = clock();
                 if (!g_is_init) {
                     g_graph.init(gparams::get_value("topology"));
                     g_is_init = true;
                 }
                 g_graph.BFS(gparams::get_value("dst"));
                 g_is_queued = true;
+                endTime = clock();
+                std::cout << "Graph init Time : " << (double)(endTime - startTime) << "ms" << std::endl;
             }
+            is_smtfile_init = true;
             if (n->get_kind() == AST_APP) {
                 bool is_literal;
                 std::string var_name = to_app(n)->get_decl()->get_name().str();
@@ -1070,21 +1078,22 @@ namespace smt {
                 if (is_literal) {
                     add_variable(v, var_name);
                 }
-                else {
-                    if (var_name == "bit2bool" )
-                    {
-                        int idx = to_app(n)->get_parameter(0).get_int();
-                        vector<std::string> theory_varibales = parse_theory_variable(n);
-                        if (theory_varibales.contains("0_dst-ip")) {
-                            std::string bit2bool_name = var_name + std::to_string(idx);
-                            m_dstip_var_map[idx] = v;
-                            if (has_dstip_var == false) {
-                                has_dstip_var = true;
-                            }
-                            add_variable(v, bit2bool_name);
-                        }
-                    }
-                }
+
+                //else {
+                //    if (var_name == "bit2bool" )
+                //    {
+                //        int idx = to_app(n)->get_parameter(0).get_int();
+                //        vector<std::string> theory_varibales = parse_theory_variable(n);
+                //        if (theory_varibales.contains("0_dst-ip")) {
+                //            std::string bit2bool_name = var_name + std::to_string(idx);
+                //            m_dstip_var_map[idx] = v;
+                //            if (has_dstip_var == false) {
+                //                has_dstip_var = true;
+                //            }
+                //            add_variable(v, bit2bool_name);
+                //        }
+                //    }
+                //}
             }
 
         }
