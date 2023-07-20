@@ -78,7 +78,7 @@ namespace smt {
     public:
 
         // ADD_BEGIN
-        enum item_type {connect_permit, dst_ip, bgp_import_permit, bgp_community,bgp_overall_permit, overall_permit, bgp_export_permit ,other, data_fwd, reach_id };
+        enum item_type {connect_permit, dst_ip, bgp_import_permit, bgp_community,bgp_overall_permit, overall_permit, data_fwd, bgp_export_permit ,other, reach_id };
         bool is_sorted = false;
         // ADD_END
 
@@ -410,7 +410,7 @@ namespace smt {
             //    std::cout << i.type << "\t" << i.name << "\t" << i.topo_index << "\n";
             //}
 
-            //m_dstip_candidate_map["00001010000000000000000000000110"] = true;
+            //m_dstip_candidate_map["1011010000000000000101000000001"] = true;
             //m_dstip_candidate_map["00001010000000000000000000001000"] = true;
             //m_dstip_candidate_map["11001000000000100101000000000001"] = true;
 

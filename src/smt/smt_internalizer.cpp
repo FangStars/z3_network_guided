@@ -948,8 +948,8 @@ namespace smt {
     std::string SINGLE_IMPORT_FLAG = "SINGLE-IMPORT";
     std::string EXPORT_FLAG = "EXPORT";
     std::string SINGLE_EXPORT_FLAG = "SINGLE-EXPORT";
-    std::string REACH_FLAG1 = "reachable-id";
-    std::string REACH_FLAG2 = "reachable";
+    //std::string REACH_FLAG1 = "reachable-id";
+    //std::string REACH_FLAG2 = "reachable";
 
     void  context::add_variable(bool_var v , std::string var_name) {
         vector<std::string> element_list;
@@ -961,15 +961,13 @@ namespace smt {
             type = dst_ip;
         }
         else if (element_list.size() == 4) {
-            if (element_list[2] == REACH_FLAG1 || element_list[2] == REACH_FLAG2)
-            {
-                distance = g_graph.getDistanceToOrigin(element_list[3],"", var_name);
-                type = reach_id;
-            }
-            else {
-                distance = g_graph.getDistanceToOrigin(element_list[2], element_list[3], var_name);
-                type = data_fwd;
-            }
+            //if (element_list[2] == REACH_FLAG1 || element_list[2] == REACH_FLAG2)
+            //{
+            //    distance = g_graph.getDistanceToOrigin(element_list[3],"", var_name);
+            //    type = reach_id;
+            //}
+            distance = g_graph.getDistanceToOrigin(element_list[2], element_list[3], var_name);
+            type = data_fwd;
         }
         else if (element_list.size() == 6) {
             if (element_list.get(2) == CONNECTED_FLAG) {
@@ -1013,7 +1011,7 @@ namespace smt {
         if (type == bgp_community)
             return;
 
-        if ((std::fmod(distance, 1.0) - 0.1) < 1e-6) {
+        if ((std::fmod(distance, 1.0) - 0.1) < 1e-6 || type == bgp_export_permit) {
             m_assginment_map[v] = true;
         }
         else {
@@ -1059,16 +1057,16 @@ namespace smt {
         if (gparams::get_value("guided") == "true")
         {
             if (!g_is_queued && is_smtfile_init) {
-                clock_t startTime, endTime;
-                startTime = clock();
+                //clock_t startTime, endTime;
+                //startTime = clock();
                 if (!g_is_init) {
                     g_graph.init(gparams::get_value("topology"));
                     g_is_init = true;
                 }
                 g_graph.BFS(gparams::get_value("dst"));
                 g_is_queued = true;
-                endTime = clock();
-                std::cout << "Graph init Time : " << (double)(endTime - startTime) << "ms" << std::endl;
+                //endTime = clock();
+                //std::cout << "Graph init Time : " << (double)(endTime - startTime) << "ms" << std::endl;
             }
             is_smtfile_init = true;
             if (n->get_kind() == AST_APP) {
@@ -1078,7 +1076,6 @@ namespace smt {
                 if (is_literal) {
                     add_variable(v, var_name);
                 }
-
                 //else {
                 //    if (var_name == "bit2bool" )
                 //    {
