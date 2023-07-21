@@ -948,8 +948,8 @@ namespace smt {
     std::string SINGLE_IMPORT_FLAG = "SINGLE-IMPORT";
     std::string EXPORT_FLAG = "EXPORT";
     std::string SINGLE_EXPORT_FLAG = "SINGLE-EXPORT";
-    //std::string REACH_FLAG1 = "reachable-id";
-    //std::string REACH_FLAG2 = "reachable";
+    std::string REACH_FLAG1 = "reachable-id";
+    std::string REACH_FLAG2 = "reachable";
 
     void  context::add_variable(bool_var v , std::string var_name) {
         vector<std::string> element_list;
@@ -961,13 +961,15 @@ namespace smt {
             type = dst_ip;
         }
         else if (element_list.size() == 4) {
-            //if (element_list[2] == REACH_FLAG1 || element_list[2] == REACH_FLAG2)
-            //{
-            //    distance = g_graph.getDistanceToOrigin(element_list[3],"", var_name);
-            //    type = reach_id;
-            //}
-            distance = g_graph.getDistanceToOrigin(element_list[2], element_list[3], var_name);
-            type = data_fwd;
+            if (element_list[2] == REACH_FLAG1 || element_list[2] == REACH_FLAG2)
+            {
+                distance = g_graph.getDistanceToOrigin(element_list[3],"", var_name);
+                type = reach_id;
+            }
+            else {
+                distance = g_graph.getDistanceToOrigin(element_list[2], element_list[3], var_name);
+                type = data_fwd;
+            }
         }
         else if (element_list.size() == 6) {
             if (element_list.get(2) == CONNECTED_FLAG) {
