@@ -1011,11 +1011,16 @@ namespace smt {
         if (type == bgp_community)
             return;
 
-        if ((std::fmod(distance, 1.0) - 0.1) < 1e-6 || type == bgp_export_permit) {
+        if ((std::fmod(distance, 1.0) - 0.1) < 1e-6) {
             m_assginment_map[v] = true;
         }
         else {
-            m_assginment_map[v] = false;
+            if (type == bgp_export_permit || type == overall_permit || type == bgp_overall_permit || type == reach_id) {
+                m_assginment_map[v] = true;
+            }
+            else {
+                m_assginment_map[v] = false;
+            }
         }
         add_item_entry(v,var_name, type, distance);
     }
