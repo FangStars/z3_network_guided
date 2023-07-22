@@ -72,5 +72,6 @@ private:
 extern Graph g_graph;
 extern bool g_is_queued;
 extern bool g_is_init;
+extern bool g_is_smtfile_init;
 
 // ADD_END

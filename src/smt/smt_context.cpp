@@ -1937,6 +1937,7 @@ namespace smt {
         if (!is_pos) l.neg();
         TRACE("decide", tout << "case split " << l << "\n" << "activity: " << get_activity(var) << "\n";);
         assign(l, b_justification::mk_axiom(), true);
+        //std::cout << "decide " << to_app(bool_var2expr(var))->get_decl()->get_name().str() << " " << get_assignment(var) << std::endl;
 
         // ADD_BEGIN
 #ifdef SHOW_DPLL

@@ -923,8 +923,6 @@ namespace smt {
 
     // ADD_BEGIN__
 
-    bool is_smtfile_init = false; // init graph after smt file has been read, or the init process will be very slow.
-
     static bool starts_with(const std::string& s, const std::string& prefix) {
         return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
     }
@@ -1058,19 +1056,20 @@ namespace smt {
         // ADD_BEGIN
         if (gparams::get_value("guided") == "true")
         {
-            if (!g_is_queued && is_smtfile_init) {
-                //clock_t startTime, endTime;
-                //startTime = clock();
+            g_is_init = true;
+            if (!g_is_queued && g_is_smtfile_init) {
+                clock_t startTime, endTime;
+                startTime = clock();
                 if (!g_is_init) {
                     g_graph.init(gparams::get_value("topology"));
                     g_is_init = true;
                 }
                 g_graph.BFS(gparams::get_value("dst"));
                 g_is_queued = true;
-                //endTime = clock();
-                //std::cout << "Graph init Time : " << (double)(endTime - startTime) << "ms" << std::endl;
+                endTime = clock();
+                std::cout << "Graph init Time : " << (double)(endTime - startTime) << "ms" << std::endl;
             }
-            is_smtfile_init = true;
+            g_is_smtfile_init = true;
             if (n->get_kind() == AST_APP) {
                 bool is_literal;
                 std::string var_name = to_app(n)->get_decl()->get_name().str();

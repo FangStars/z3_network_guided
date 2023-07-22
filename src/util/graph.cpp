@@ -12,6 +12,7 @@
 Graph g_graph;
 bool g_is_queued = false;
 bool g_is_init = false;
+bool g_is_smtfile_init = false; // init graph after smt file has been read, or the init process will be very slow.
 
 void Graph::addNode(const std::string& node) {
     if (!hasNode(node)) {
