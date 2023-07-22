@@ -1056,7 +1056,6 @@ namespace smt {
         // ADD_BEGIN
         if (gparams::get_value("guided") == "true")
         {
-            g_is_init = true;
             if (!g_is_queued && g_is_smtfile_init) {
                 clock_t startTime, endTime;
                 startTime = clock();
