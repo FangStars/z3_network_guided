@@ -932,7 +932,7 @@ namespace smt {
         std::string ip_file = gparams::get_value("ip_file");
         std::string node_file = gparams::get_value("dstnode_file"); 
         
-        //std::string filePath = "C:\\Users\\89400\\Desktop\\Agraduate\\project\\guided_SMT\\txt\\ip\\columbus_isolation_ip_usa_columbia.txt";  // 输入文件路径
+        //std::string filePath = "C:\\Users\\89400\\Desktop\\Agraduate\\project\\guided_SMT\\txt\\ip\\columbus_isolation_ip_usa_columbia.txt";
 
         std::vector<std::pair<std::string, int>> ip_ranges = convertIpRangeFromFile(ip_file);
         std::vector<std::string> nodes = readNodesFromFile(node_file);

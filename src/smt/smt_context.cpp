@@ -1918,7 +1918,6 @@ namespace smt {
                 }
                 assign(l, b_justification::mk_axiom(), true);
 
-                // Êä³ö½á¹û
            /*     if (to_app(bool_var2expr(var))->get_decl()->get_name().str() == "bit2bool") {
                     int idx = to_app(bool_var2expr(var))->get_parameter(0).get_int();
                     std::cout << "decide " << to_app(bool_var2expr(var))->get_decl()->get_name().str() << "_" << idx << " " << get_assignment(var) << std::endl;

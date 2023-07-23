@@ -137,7 +137,6 @@ void Graph::BFS(const std::string& startNode) {
             for (auto& neighbor : value) {
                 int adjNodeDistance = distanceMap.at(neighbor.dstNode);
 
-                // 如果终点的距离更近，那就设置起点port的优先级更高
 
                 if (currentNodeDistance > adjNodeDistance)
                 {
@@ -167,7 +166,6 @@ double Graph::getDistanceToOrigin(const std::string& node, const std::string& po
         throw default_exception("Exception at distanceNodeMap: " + node + varName);
     }
 
-    // 更接近终点的port为0.1，其余为0.2
     res = Nodedistance + 0.2;
 
     if (port == "")

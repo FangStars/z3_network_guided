@@ -208,8 +208,6 @@ namespace smt {
                 this->topo_index = topo_index;
             }
         };
-
-        // 存放变量名
         vector<m_item> m_item_array;
         // add_dfy
         std::unordered_map<std::string, int> m_dstip_candidate_map;
@@ -377,7 +375,7 @@ namespace smt {
             return ip_range_list;
         }
 
-        // 自定义比较函数，根据条件对IP进行排序
+        //
         bool customSort(const std::string& ip1, const std::string& ip2,
             const std::unordered_map<std::string, std::string>& m_dstip_dstNode_map,
             const std::vector<std::string>& m_prior_dstNode) {
@@ -385,28 +383,28 @@ namespace smt {
             bool hasIp2 = m_dstip_dstNode_map.find(ip2) != m_dstip_dstNode_map.end();
 
             if (hasIp1 && !hasIp2) {
-                return true; // ip1 有优先级，ip2 没有优先级，ip1 排在前面
+                return true; // ip1 
             }
             else if (!hasIp1 && hasIp2) {
-                return false; // ip2 有优先级，ip1 没有优先级，ip2 排在前面
+                return false; // ip2 
             }
             else if (hasIp1 && hasIp2) {
                 bool ip1HasPriorNode = std::find(m_prior_dstNode.begin(), m_prior_dstNode.end(), m_dstip_dstNode_map.at(ip1)) != m_prior_dstNode.end();
                 bool ip2HasPriorNode = std::find(m_prior_dstNode.begin(), m_prior_dstNode.end(), m_dstip_dstNode_map.at(ip2)) != m_prior_dstNode.end();
 
                 if (ip1HasPriorNode && !ip2HasPriorNode) {
-                    return true; // ip1 的优先节点在 m_prior_dstNode 中，ip2 不在，ip1 排在前面
+                    return true; // ip1
                 }
                 else if (!ip1HasPriorNode && ip2HasPriorNode) {
-                    return false; // ip2 的优先节点在 m_prior_dstNode 中，ip1 不在，ip2 排在前面
+                    return false; // ip2 
                 }
             }
 
-            // 以上条件都不满足时，根据 ip1 和 ip2 的值进行字典序比较
+            // 
             return ip1 < ip2;
         }
 
-        // 对 m_dstip_candidate_map 进行排序
+        // 
         std::vector<std::string> sortDstIpCandidates(std::unordered_map<std::string, int>& m_dstip_candidate_map,
             const std::unordered_map<std::string, std::string>& m_dstip_dstNode_map,
             const std::vector<std::string>& m_prior_dstNode) {
@@ -465,7 +463,7 @@ namespace smt {
                 //std::string dstip_candidate = dstip_candidate;
                 bool is_valid = check_valid(dstip_candidate);
                 if (is_valid && cur_IP.compare(dstip_candidate) == 0) {
-                    if (m_dstip_candidate_map[dstip_candidate] < cur_cnt) { // 选择计数较少的ip
+                    if (m_dstip_candidate_map[dstip_candidate] < cur_cnt) {
                         cur_cnt = m_dstip_candidate_map[dstip_candidate];
                         new_ip = dstip_candidate;
                         flag_changeip = true;
@@ -484,7 +482,7 @@ namespace smt {
             int max_cnt = 10;
             bool is_valid = true;
             // add_dfy
-            // 如果超过计数值
+            // 
             // todo
             if (m_dstip_candidate_map[cur_IP] > max_cnt) {
                 std::cout << "change!!!" << std::endl;
@@ -506,7 +504,7 @@ namespace smt {
                 // ADD_DFY_
                 return cur_IP[(31 - index)] == '0' ? false : true;
             }
-            else { //如果不成功，找一个可行的候补ip
+            else { //
                 bool flag_changeip = find_newip();
                 if (flag_changeip) {
                     cur_dstNode = m_dstip_dstNode_map[cur_IP];
@@ -601,7 +599,7 @@ namespace smt {
             endTime = clock();
             //std::cout << "Array Sort Time : " << (double)(endTime - startTime) << "ms" << std::endl;
 
-            // 输出所有变量
+            // 
             for (const auto& i : m_item_array) {
                 std::cout << i.type << "\t" << i.name << "\t" << i.topo_index << "\n";
             }
