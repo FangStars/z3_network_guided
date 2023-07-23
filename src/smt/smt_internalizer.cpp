@@ -922,6 +922,55 @@ namespace smt {
 
     // ADD_BEGIN__
 
+    //bool is_smtfile_init = false; // init graph after smt file has been read, or the init process will be very slow.
+
+    // todo
+
+
+    void context::get_ip_dstnode() {
+        // ADD_DEBUG
+        std::string ip_file = gparams::get_value("ip_file");
+        std::string node_file = gparams::get_value("dstnode_file"); 
+        
+        //std::string filePath = "C:\\Users\\89400\\Desktop\\Agraduate\\project\\guided_SMT\\txt\\ip\\columbus_isolation_ip_usa_columbia.txt";  // 输入文件路径
+
+        std::vector<std::pair<std::string, int>> ip_ranges = convertIpRangeFromFile(ip_file);
+        std::vector<std::string> nodes = readNodesFromFile(node_file);
+
+        
+
+        if (ip_ranges.size() == nodes.size()) {
+            
+            for (int i = 0; i < nodes.size(); ++i) {
+                std::pair<std::string, int> ip_range = ip_ranges[i];
+                std::string ip_binary = ip_range.first;
+                int subnet_mask_length = ip_range.second;
+
+                std::string node = nodes[i];
+                m_dstip_candidate_map[ip_binary] = 0;
+                m_dstip_mask_map[ip_binary] = subnet_mask_length;
+                m_dstip_dstNode_map[ip_binary] = node;
+
+                /*     std::cout << "IP Address (Binary): " << ip_binary << ", Subnet Mask Length: " << subnet_mask_length << std::endl;
+                     std::cout << "dst Node: " << node << std::endl;*/
+            }
+
+        }
+
+        std::string prior_node_file = gparams::get_value("pdstnode_file");
+        m_prior_dstNode = readNodesFromFile(prior_node_file);
+
+        sorted_ips = sortDstIpCandidates(m_dstip_candidate_map, m_dstip_dstNode_map, m_prior_dstNode);
+
+        cur_IP = sorted_ips[0];
+        cur_dstNode = m_dstip_dstNode_map[cur_IP];
+        
+        //for (const auto& ip : sorted_ips) {
+        //    std::cout << ip << ": " << m_dstip_dstNode_map[ip] << std::endl;
+        //}
+
+    }
+
     static bool starts_with(const std::string& s, const std::string& prefix) {
         return s.size() >= prefix.size() && s.compare(0, prefix.size(), prefix) == 0;
     }
@@ -951,6 +1000,11 @@ namespace smt {
     void  context::add_variable(bool_var v , std::string var_name) {
         vector<std::string> element_list;
         string_split(var_name, "_", element_list);
+
+   /*     std::cout << "var_name: " << var_name << "\t" << var_name.size() << std::endl;
+        std::cout << "element_list: " << element_list << "\t" << element_list.size() << std::endl;
+        std::cout << "bool_var v: " << v << "\t" << get_assignment(v) << std::endl;*/
+
         item_type type;
         double distance = 100;
         if (element_list.size() == 1) {
@@ -1009,12 +1063,25 @@ namespace smt {
         }
         if (type == bgp_community)
             return;
+        if (flag_getip) {
+            get_ip_dstnode();
+            flag_getip = false;
+        }
 
-        if ((std::fmod(distance, 1.0) - 0.1) < 1e-6) {
+        //add_dfy (distance > 0 && (std::fmod(distance, 1.0) - 0.1) < 1e-6)
+        //if ((distance > 0 && (std::fmod(distance, 1.0) - 0.1) < 1e-6) || type == bgp_export_permit) {
+
+        if ((std::fmod(distance, 1.0) - 0.1) < 1e-6 && distance > 0) {
             m_assginment_map[v] = true;
         }
         else {
             m_assginment_map[v] = false;
+            if (type == bgp_export_permit || type == overall_permit || type == bgp_overall_permit || type == reach_id) {
+                m_assginment_map[v] = true;
+            }
+            else {
+                m_assginment_map[v] = false;
+            }
         }
         add_item_entry(v,var_name, type, distance);
     }
@@ -1039,6 +1106,68 @@ namespace smt {
         return res;
     }
 
+    //add_dfy
+    void context::update_item_array() {
+        for (auto it : m_item_array) {
+            std::string var_name = it.name;
+            vector<std::string> element_list;
+            string_split(var_name, "_", element_list);
+
+            double distance = 100;
+            if (element_list.size() == 1) {
+                distance = -1;
+            }
+            else if (element_list.size() == 4) {
+                if (element_list[2] == REACH_FLAG1 || element_list[2] == REACH_FLAG2)
+                {
+                    distance = g_graph.getDistanceToOrigin(element_list[3], "", var_name);
+                }
+                else {
+                    distance = g_graph.getDistanceToOrigin(element_list[2], element_list[3], var_name);
+                }
+            }
+            else if (element_list.size() == 6) {
+                if (element_list.get(2) == CONNECTED_FLAG) {
+                    distance = g_graph.getDistanceToOrigin(element_list[1], element_list[4], var_name);
+                }
+                else if (element_list.get(2) == OVERALL_FLAG) {
+                    distance = g_graph.getDistanceToOrigin(element_list[1], "", var_name);
+                }
+                else if (element_list.get(2) == BGP_FLAG) {
+                    if (element_list.get(3) == IMPORT_FLAG || element_list.get(3) == SINGLE_IMPORT_FLAG) {
+                        distance = g_graph.getDistanceToOrigin(element_list[1], element_list[4], var_name);
+                    }
+                    else if (element_list.get(3) == EXPORT_FLAG || element_list.get(3) == SINGLE_EXPORT_FLAG) {
+                        distance = g_graph.getDistanceToOrigin(element_list[1], "", var_name);
+                    }
+                    else if (element_list.get(3) == BEST_FLAG)
+                    {
+                        distance = g_graph.getDistanceToOrigin(element_list[1], "", var_name);
+                    }
+                }
+                else {
+                    std::cout << "varibale not consider yet\t" << var_name << "\t" << element_list.size() << std::endl;
+                }
+            }
+            else
+            {
+                std::cout << "varibale not consider yet\t" << var_name << "\t" << element_list.size() << std::endl;
+            }
+
+            it.topo_index = distance;
+
+            bool_var v = it.v;
+            if (distance > 0 && (std::fmod(distance, 1.0) - 0.1) < 1e-6) {
+                //if ((std::fmod(distance, 1.0) - 0.1) < 1e-6) {
+                m_assginment_map[v] = true;
+            }
+            else {
+                m_assginment_map[v] = false;
+            }
+        }
+
+    }
+
     // __ADD_END
 
     /**
@@ -1055,14 +1184,36 @@ namespace smt {
         // ADD_BEGIN
         if (gparams::get_value("guided") == "true")
         {
-            if (!g_is_queued) {
+            //if (!g_is_queued && is_smtfile_init) {
+            //    //clock_t startTime, endTime;
+            //    //startTime = clock();
+            //g_is_init = true;
+            if (!g_is_queued && g_is_smtfile_init) {
+                clock_t startTime, endTime;
+                startTime = clock();
                 if (!g_is_init) {
+
                     g_graph.init(gparams::get_value("topology"));
+                    //get_ip_dstnode();
                     g_is_init = true;
                 }
-                g_graph.BFS(gparams::get_value("dst"));
+
+                if (gparams::get_value("flag_allpair") == "1") {
+                    // add_dfy
+                    std::vector<std::string> nodes = readNodesFromFile(gparams::get_value("dstnode_file"));
+                    cur_dstNode = nodes[0];
+                    if (gparams::get_value("dst") == ".*")
+                        g_graph.BFS(cur_dstNode);
+                    else
+                        g_graph.BFS(gparams::get_value("dst"));
+                }
+                else {
+                    g_graph.BFS(gparams::get_value("dst"));
+                }
                 g_is_queued = true;
             }
+            //is_smtfile_init = true;
+            g_is_smtfile_init = true;
             if (n->get_kind() == AST_APP) {
                 bool is_literal;
                 std::string var_name = to_app(n)->get_decl()->get_name().str();
@@ -1070,7 +1221,7 @@ namespace smt {
                 if (is_literal) {
                     add_variable(v, var_name);
                 }
-                else {
+                if(gparams::get_value("flag_allpair") == "1") {
                     if (var_name == "bit2bool" )
                     {
                         int idx = to_app(n)->get_parameter(0).get_int();
@@ -1082,12 +1233,21 @@ namespace smt {
                                 has_dstip_var = true;
                             }
                             add_variable(v, bit2bool_name);
+                            //std::cout << "var_name: " << var_name << "\t" << var_name.size() << std::endl;
+                            // std::cout << "bool_var v: " << v << "\t" << get_assignment(v) << std::endl;
+
                         }
                     }
                 }
             }
 
+
+            
+
         }
+
+        
+
         // ADD_END
 
         set_bool_var(id, v);

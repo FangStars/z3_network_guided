@@ -12,6 +12,7 @@
 Graph g_graph;
 bool g_is_queued = false;
 bool g_is_init = false;
+bool g_is_smtfile_init = false; // init graph after smt file has been read, or the init process will be very slow.
 
 void Graph::addNode(const std::string& node) {
     if (!hasNode(node)) {
@@ -75,6 +76,7 @@ std::vector<Neighbor> Graph::getNeighborList(const std::string& node) const {
 void Graph::init(const std::string& topologyPath)
 {
     std::ifstream file(topologyPath);
+
     if (!file) {
         throw default_exception("Error opening topology file: " + topologyPath);
     }
@@ -134,6 +136,9 @@ void Graph::BFS(const std::string& startNode) {
             int currentNodeDistance = distanceMap.at(key);
             for (auto& neighbor : value) {
                 int adjNodeDistance = distanceMap.at(neighbor.dstNode);
+
+                // 如果终点的距离更近，那就设置起点port的优先级更高
+
                 if (currentNodeDistance > adjNodeDistance)
                 {
                     priorerSet.insert(key + "_" + neighbor.srcPort);
@@ -162,6 +167,7 @@ double Graph::getDistanceToOrigin(const std::string& node, const std::string& po
         throw default_exception("Exception at distanceNodeMap: " + node + varName);
     }
 
+    // 更接近终点的port为0.1，其余为0.2
     res = Nodedistance + 0.2;
 
     if (port == "")

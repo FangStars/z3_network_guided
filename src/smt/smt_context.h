@@ -51,11 +51,19 @@ Revision History:
 #include "solver/progress_callback.h"
 #include "solver/assertions/asserted_formulas.h"
 #include <tuple>
+#include <iostream>
+#include <bitset>
+#include <sstream>
+
 
 // ADD_BEGIN
 #include <map>
 #include<time.h>
 #include <cmath>
+#include <iostream>
+#include <bitset>
+#include <sstream>
+#include "util/graph.h"
 //#define SHOW_DPLL 1
 // ADD_END
 
@@ -200,8 +208,20 @@ namespace smt {
                 this->topo_index = topo_index;
             }
         };
+
+        // 存放变量名
         vector<m_item> m_item_array;
-        std::map<std::string, bool> m_dstip_candidate_map;
+        // add_dfy
+        std::unordered_map<std::string, int> m_dstip_candidate_map;
+        std::unordered_map<std::string, int> m_dstip_mask_map;
+        std::unordered_map<std::string, std::string> m_dstip_dstNode_map;
+        std::vector<std::string> m_prior_dstNode;
+        std::vector<std::string> sorted_ips;
+        bool flag_getip = true;
+
+        std::string cur_dstNode;
+        std::string cur_IP;
+
         std::map<int,bool_var> m_dstip_var_map;
         std::unordered_map<bool_var, bool> m_assginment_map;
         bool has_dstip_var = false;
@@ -291,6 +311,118 @@ namespace smt {
     public:
 
         // ADD_BEGIN
+        // ADD_DFY_BEGIN
+        void saveItemsToFile(const vector<m_item >& items, const std::string& filename) {
+            std::ofstream file(filename);
+            if (file.is_open()) {
+                for (const auto& item : items) {
+                    file << item.v << "," << item.name << "," << item.type << "," << item.topo_index << std::endl;
+                }
+                file.close();
+                std::cout << "Items saved to " << filename << " successfully." << std::endl;
+            }
+            else {
+                std::cout << "Failed to open file " << filename << " for writing." << std::endl;
+            }
+        }
+
+        void get_ip_dstnode();
+        void update_item_array();
+
+        // add_dfy
+        std::vector<std::string> readNodesFromFile(const std::string& filename) {
+            std::vector<std::string> nodes;
+            std::ifstream inputFile(filename);
+
+            if (!inputFile) {
+                std::cerr << "Error: Unable to open file " << filename << std::endl;
+                return nodes; // Return an empty vector if the file cannot be opened
+            }
+
+            std::string line;
+            while (std::getline(inputFile, line)) {
+                nodes.push_back(line);
+            }
+
+            inputFile.close();
+            return nodes;
+        }
+
+        std::vector<std::pair<std::string, int>> convertIpRangeFromFile(const std::string& file_path) {
+            std::vector<std::pair<std::string, int>> ip_range_list;
+            std::ifstream file(file_path);
+
+            if (file.is_open()) {
+                std::string line;
+                while (std::getline(file, line)) {
+                    size_t pos = line.find("/");
+                    if (pos != std::string::npos) {
+                        std::string ip_address = line.substr(0, pos);
+                        int subnet_mask_length = std::stoi(line.substr(pos + 1));
+                        std::string ip_binary;
+                        size_t start = 0;
+                        size_t end = ip_address.find(".");
+                        while (end != std::string::npos) {
+                            ip_binary += std::bitset<8>(std::stoi(ip_address.substr(start, end - start))).to_string();
+                            start = end + 1;
+                            end = ip_address.find(".", start);
+                        }
+                        ip_binary += std::bitset<8>(std::stoi(ip_address.substr(start))).to_string();
+                        ip_range_list.push_back(std::make_pair(ip_binary, subnet_mask_length));
+                    }
+                }
+                file.close();
+            }
+
+            return ip_range_list;
+        }
+
+        // 自定义比较函数，根据条件对IP进行排序
+        bool customSort(const std::string& ip1, const std::string& ip2,
+            const std::unordered_map<std::string, std::string>& m_dstip_dstNode_map,
+            const std::vector<std::string>& m_prior_dstNode) {
+            bool hasIp1 = m_dstip_dstNode_map.find(ip1) != m_dstip_dstNode_map.end();
+            bool hasIp2 = m_dstip_dstNode_map.find(ip2) != m_dstip_dstNode_map.end();
+
+            if (hasIp1 && !hasIp2) {
+                return true; // ip1 有优先级，ip2 没有优先级，ip1 排在前面
+            }
+            else if (!hasIp1 && hasIp2) {
+                return false; // ip2 有优先级，ip1 没有优先级，ip2 排在前面
+            }
+            else if (hasIp1 && hasIp2) {
+                bool ip1HasPriorNode = std::find(m_prior_dstNode.begin(), m_prior_dstNode.end(), m_dstip_dstNode_map.at(ip1)) != m_prior_dstNode.end();
+                bool ip2HasPriorNode = std::find(m_prior_dstNode.begin(), m_prior_dstNode.end(), m_dstip_dstNode_map.at(ip2)) != m_prior_dstNode.end();
+
+                if (ip1HasPriorNode && !ip2HasPriorNode) {
+                    return true; // ip1 的优先节点在 m_prior_dstNode 中，ip2 不在，ip1 排在前面
+                }
+                else if (!ip1HasPriorNode && ip2HasPriorNode) {
+                    return false; // ip2 的优先节点在 m_prior_dstNode 中，ip1 不在，ip2 排在前面
+                }
+            }
+
+            // 以上条件都不满足时，根据 ip1 和 ip2 的值进行字典序比较
+            return ip1 < ip2;
+        }
+
+        // 对 m_dstip_candidate_map 进行排序
+        std::vector<std::string> sortDstIpCandidates(std::unordered_map<std::string, int>& m_dstip_candidate_map,
+            const std::unordered_map<std::string, std::string>& m_dstip_dstNode_map,
+            const std::vector<std::string>& m_prior_dstNode) {
+            std::vector<std::string> ips;
+            for (const auto& entry : m_dstip_candidate_map) {
+                ips.push_back(entry.first);
+            }
+
+            std::sort(ips.begin(), ips.end(), [&](const std::string& ip1, const std::string& ip2) {
+                return customSort(ip1, ip2, m_dstip_dstNode_map, m_prior_dstNode);
+                });
+
+            return ips;
+        }
+
+        // ADD_DFY_END
 
         void add_variable(sat::bool_var v,std::string var_name);
 
@@ -302,32 +434,93 @@ namespace smt {
             m_item_array.push_back(item);
         }
 
-        bool assign_dstip_bool(int index) {
-            for (auto it : m_dstip_candidate_map) {
-                if (it.second == false)
-                {
+        bool check_valid(std::string dstip_candidate) {
+            bool is_valid = true;
+            // get dst_ip that consistent with current assignment ?????
+            for (int i = 31; i > 0; i--) {
+                lbool assign_bool = get_assignment(m_dstip_var_map[i]);
+                if (assign_bool == l_undef) {
                     continue;
                 }
-                std::string dstip_candidate = it.first;
-                bool is_valid = true;
-                // get dst_ip that consistent with current assignment
-                for (int i = 31; i > 0; i--) {
-                    lbool assign_bool = get_assignment(m_dstip_var_map[i]);
-                    if (assign_bool == l_undef) {
-                        continue;
-                    }
-                    lbool i_bool = dstip_candidate[31 - i] == '0' ? l_false : l_true;
-                    if (assign_bool != i_bool) {
-                        is_valid = false;
-                        break;
-                    }
-                }
-                if (is_valid) {
-                    return dstip_candidate[(31 - index)] == '0' ? false : true;
+                // ADD_DFY_
+                lbool i_bool = dstip_candidate[31 - i] == '0' ? l_false : l_true;
+
+                //lbool i_bool = dstip_candidate[i] == '0' ? l_false : l_true;
+                if (assign_bool != i_bool) {
+                    is_valid = false;
+                    break;
                 }
             }
+
+            return is_valid;
+        }
+
+        bool find_newip() {
+            int cur_cnt = 100000;
+            bool flag_changeip = false;
+            std::string new_ip;
+
+            //for (auto it : m_dstip_candidate_map) {
+            for (auto dstip_candidate : sorted_ips) {
+                //std::string dstip_candidate = dstip_candidate;
+                bool is_valid = check_valid(dstip_candidate);
+                if (is_valid && cur_IP.compare(dstip_candidate) == 0) {
+                    if (m_dstip_candidate_map[dstip_candidate] < cur_cnt) { // 选择计数较少的ip
+                        cur_cnt = m_dstip_candidate_map[dstip_candidate];
+                        new_ip = dstip_candidate;
+                        flag_changeip = true;
+                    }
+                }
+            }
+
+            if (flag_changeip && cur_IP.compare(new_ip) != 0) {
+                cur_IP = new_ip;
+            }
+
+            return flag_changeip;
+        }
+
+        bool assign_dstip_bool(int index) {
+            int max_cnt = 10;
+            bool is_valid = true;
+            // add_dfy
+            // 如果超过计数值
+            // todo
+            if (m_dstip_candidate_map[cur_IP] > max_cnt) {
+                std::cout << "change!!!" << std::endl;
+                bool flag_changeip = find_newip();
+                if (flag_changeip) {
+                    m_dstip_candidate_map[cur_IP] = 0;
+                }
+            }
+
+            if (cur_dstNode != m_dstip_dstNode_map[cur_IP]) {
+                cur_dstNode = m_dstip_dstNode_map[cur_IP];
+                g_graph.BFS(cur_dstNode);
+                update_item_array();
+                m_item_array_sort();
+            }
+            is_valid = check_valid(cur_IP);
+
+            if (is_valid) {
+                // ADD_DFY_
+                return cur_IP[(31 - index)] == '0' ? false : true;
+            }
+            else { //如果不成功，找一个可行的候补ip
+                bool flag_changeip = find_newip();
+                if (flag_changeip) {
+                    cur_dstNode = m_dstip_dstNode_map[cur_IP];
+                    g_graph.BFS(cur_dstNode);
+                    update_item_array();
+                    m_item_array_sort();
+                    return cur_IP[(31 - index)] == '0' ? false : true;
+                }
+            }
+
+            m_dstip_candidate_map[cur_IP] += 1;
             std::cout << "can not find valid dst-ip" << std::endl;
-            return false;
+            return true;
+            //return false;
         }
 
         std::string get_current_dstip() {
@@ -399,6 +592,8 @@ namespace smt {
             quicksort(i + 1, last);
         }
 
+        //add_dfy
+        
         void m_item_array_sort() {
             clock_t startTime, endTime;
             startTime = clock();
@@ -406,11 +601,15 @@ namespace smt {
             endTime = clock();
             //std::cout << "Array Sort Time : " << (double)(endTime - startTime) << "ms" << std::endl;
 
-            //for (const auto& i : m_item_array) {
-            //    std::cout << i.type << "\t" << i.name << "\t" << i.topo_index << "\n";
-            //}
+            // 输出所有变量
+            for (const auto& i : m_item_array) {
+                std::cout << i.type << "\t" << i.name << "\t" << i.topo_index << "\n";
+            }
 
-            //m_dstip_candidate_map["00001010000000000000000000000110"] = true;
+            //get_ip_dstnode();
+
+
+            
             //m_dstip_candidate_map["00001010000000000000000000001000"] = true;
             //m_dstip_candidate_map["11001000000000100101000000000001"] = true;
 

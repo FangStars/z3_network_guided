@@ -128,6 +128,11 @@ namespace {
                     {
                         m_context.m_item_array_sort();
                         m_context.is_sorted = true;
+                        // ADD_DFY_BEGIN
+                /*        std::cout << "In smt_case_split_queue.cpp: " << std::endl;
+                        std::cout << "sizeof(m_context): "  << sizeof(m_context) << std::endl;
+                        std::cout << "sort" << std::endl;*/
+                        // ADD_DFY_END
                     }
                     next = m_context.m_item_array_next();
                     if (m_context.get_assignment(next) == l_undef)

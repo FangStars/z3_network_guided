@@ -46,6 +46,13 @@ void env_params::collect_param_descrs(param_descrs & d) {
     d.insert("guided", CPK_BOOL, "set if guided", "false"); 
     d.insert("dst", CPK_STRING, "prefix origination", "");  
     d.insert("dst_port", CPK_STRING, "prefix origination port", "");
-    d.insert("network_type", CPK_STRING, "network type, internet or fattree", "0"); // 0: internet, 1: Fattree
+    d.insert("prop_type", CPK_STRING, "property type", "0"); // 0: reachability; 1:isolation; 2:forwarding
+    d.insert("network_type", CPK_STRING, "network type", "0"); // 0: internet; 1:fattree
+    d.insert("flag_allpair", CPK_STRING, "flag_allpair", "0"); // 0: not all-pair; 1:all-pair
+    
+    d.insert("ip_file", CPK_STRING, "set directory of ip file", "");  // register global param
+    d.insert("dstnode_file", CPK_STRING, "set directory of dstNode file", "");
+    d.insert("pdstnode_file", CPK_STRING, "set directory of prior dstNode file", "");
+
     // ADD_END
 }
