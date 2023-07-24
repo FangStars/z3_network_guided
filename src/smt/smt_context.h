@@ -600,9 +600,9 @@ namespace smt {
             //std::cout << "Array Sort Time : " << (double)(endTime - startTime) << "ms" << std::endl;
 
             // 
-            for (const auto& i : m_item_array) {
+           /* for (const auto& i : m_item_array) {
                 std::cout << i.type << "\t" << i.name << "\t" << i.topo_index << "\n";
-            }
+            }*/
 
             //get_ip_dstnode();
 
