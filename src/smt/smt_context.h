@@ -485,7 +485,7 @@ namespace smt {
             // 
             // todo
             if (m_dstip_candidate_map[cur_IP] > max_cnt) {
-                std::cout << "change!!!" << std::endl;
+                //std::cout << "change!!!" << std::endl;
                 bool flag_changeip = find_newip();
                 if (flag_changeip) {
                     m_dstip_candidate_map[cur_IP] = 0;
@@ -516,7 +516,7 @@ namespace smt {
             }
 
             m_dstip_candidate_map[cur_IP] += 1;
-            std::cout << "can not find valid dst-ip" << std::endl;
+            //std::cout << "can not find valid dst-ip" << std::endl;
             return true;
             //return false;
         }
