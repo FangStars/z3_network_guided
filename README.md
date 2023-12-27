@@ -65,3 +65,5 @@ Below, we provide an overview of the functionalities introduced by these modific
 ## Contact
 
 - Xing Fang (xing.fang.xmu@outlook.com)
+- Feiyan Ding (feiyan.ding.xmu@gmail.com)
+- Bang Huang (bang.huang.xmu@outlook.com)
