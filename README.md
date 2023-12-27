@@ -1,238 +1,67 @@
-# Z3
-
-Z3 is a theorem prover from Microsoft Research. 
-It is licensed under the [MIT license](LICENSE.txt).
-
-If you are not familiar with Z3, you can start [here](https://github.com/Z3Prover/z3/wiki#background).
-
-Pre-built binaries for stable and nightly releases are available from [here](https://github.com/Z3Prover/z3/releases).
-
-Z3 can be built using [Visual Studio][1], a [Makefile][2] or using [CMake][3]. It provides
-[bindings for several programming languages][4]. 
-
-See the [release notes](RELEASE_NOTES.md) for notes on various stable releases of Z3.
-
-## Build status
-
-| Azure Pipelines | Code Coverage | Open Bugs | Android Build | WASM Build | 
-| --------------- | --------------|-----------|---------------|------------|
-| [![Build Status](https://dev.azure.com/Z3Public/Z3/_apis/build/status/Z3Prover.z3?branchName=master)](https://dev.azure.com/Z3Public/Z3/_build/latest?definitionId=1&branchName=master) | [![CodeCoverage](https://github.com/Z3Prover/z3/actions/workflows/coverage.yml/badge.svg)](https://github.com/Z3Prover/z3/actions/workflows/coverage.yml) | [![Open Issues](https://github.com/Z3Prover/z3/actions/workflows/wip.yml/badge.svg)](https://github.com/Z3Prover/z3/actions/workflows/wip.yml) |[![Android Build](https://github.com/Z3Prover/z3/actions/workflows/android-build.yml/badge.svg)](https://github.com/Z3Prover/z3/actions/workflows/android-build.yml) | [![WASM Build](https://github.com/Z3Prover/z3/actions/workflows/wasm.yml/badge.svg)](https://github.com/Z3Prover/z3/actions/workflows/wasm.yml) |
-
-<a href="https://github.com/z3prover/z3/pkgs/container/z3">Docker image</a>.
-
-[1]: #building-z3-on-windows-using-visual-studio-command-prompt
-[2]: #building-z3-using-make-and-gccclang
-[3]: #building-z3-using-cmake
-[4]: #z3-bindings
-
-## Building Z3 on Windows using Visual Studio Command Prompt
-
-32-bit builds, start with:
-
-```bash
-python scripts/mk_make.py
-```
-
-or instead, for a 64-bit build:
-
-```bash
-python scripts/mk_make.py -x
-```
-
-then:
-
-```bash
-cd build
-nmake
-```
-
-Z3 uses C++17. The recommended version of Visual Studio is therefore VS2019. 
-
-## Building Z3 using make and GCC/Clang
-
-Execute:
-
-```bash
-python scripts/mk_make.py
-cd build
-make
-sudo make install
-```
-
-Note by default ``g++`` is used as the C++ compiler if it is available. If you
-would prefer to use Clang change the ``mk_make.py`` invocation to:
-
-```bash
-CXX=clang++ CC=clang python scripts/mk_make.py
-```
-
-Note that Clang < 3.7 does not support OpenMP.
-
-You can also build Z3 for Windows using Cygwin and the Mingw-w64 cross-compiler.
-To configure that case correctly, make sure to use Cygwin's own python and not
-some Windows installation of Python.
-
-For a 64 bit build (from Cygwin64), configure Z3's sources with
-```bash
-CXX=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc AR=x86_64-w64-mingw32-ar python scripts/mk_make.py
-```
-A 32 bit build should work similarly (but is untested); the same is true for 32/64 bit builds from within Cygwin32.
-
-By default, it will install z3 executable at ``PREFIX/bin``, libraries at
-``PREFIX/lib``, and include files at ``PREFIX/include``, where ``PREFIX``
-installation prefix is inferred by the ``mk_make.py`` script. It is usually
-``/usr`` for most Linux distros, and ``/usr/local`` for FreeBSD and macOS. Use
-the ``--prefix=`` command line option to change the install prefix. For example:
-
-```bash
-python scripts/mk_make.py --prefix=/home/leo
-cd build
-make
-make install
-```
-
-To uninstall Z3, use
-
-```bash
-sudo make uninstall
-```
-
-To clean Z3 you can delete the build directory and run the ``mk_make.py`` script again.
-
-## Building Z3 using CMake
-
-Z3 has a build system using CMake. Read the [README-CMake.md](README-CMake.md)
-file for details. It is recommended for most build tasks, 
-except for building OCaml bindings.
-
-## Building Z3 using vcpkg
-
-vcpkg is a full platform package manager, you can easily install libzmq with vcpkg.
- 
-Execute:
-
-```bash
-git clone https://github.com/microsoft/vcpkg.git
-./bootstrap-vcpkg.bat # For powershell
-./bootstrap-vcpkg.sh # For bash
-./vcpkg install z3
-```
-
-## Dependencies
-Z3 itself has few dependencies. It uses C++ runtime libraries, including pthreads for multi-threading.
-It is optionally possible to use GMP for multi-precision integers, but Z3 contains its own self-contained 
-multi-precision functionality. Python is required to build Z3. To build Java, .Net, OCaml, 
-Julia APIs requires installing relevant tool chains.
-
-## Z3 bindings
-
-Z3 has bindings for various programming languages.
-
-### ``.NET``
-
-You can install a nuget package for the latest release Z3 from [nuget.org](https://www.nuget.org/packages/Microsoft.Z3/).
-
-Use the ``--dotnet`` command line flag with ``mk_make.py`` to enable building these.
-
-
-See [``examples/dotnet``](examples/dotnet) for examples.
-
-### ``C``
-
-These are always enabled.
-
-See [``examples/c``](examples/c) for examples.
-
-### ``C++``
-
-These are always enabled.
-
-See [``examples/c++``](examples/c++) for examples.
-
-### ``Java``
-
-Use the ``--java`` command line flag with ``mk_make.py`` to enable building these.
-
-See [``examples/java``](examples/java) for examples.
-
-### ``OCaml``
-
-Use the ``--ml`` command line flag with ``mk_make.py`` to enable building these.
-
-See [``examples/ml``](examples/ml) for examples.
-
-### ``Python``
-
-You can install the Python wrapper for Z3 for the latest release from pypi using the command
-
-```bash
-   pip install z3-solver
-```
-
-Use the ``--python`` command line flag with ``mk_make.py`` to enable building these.
-
-Note that it is required on certain platforms that the Python package directory
-(``site-packages`` on most distributions and ``dist-packages`` on Debian based
-distributions) live under the install prefix. If you use a non standard prefix
-you can use the ``--pypkgdir`` option to change the Python package directory
-used for installation. For example:
-
-```bash
-python scripts/mk_make.py --prefix=/home/leo --python --pypkgdir=/home/leo/lib/python-2.7/site-packages
-```
-
-If you do need to install to a non standard prefix a better approach is to use
-a [Python virtual environment](https://virtualenv.readthedocs.org/en/latest/)
-and install Z3 there. Python packages also work for Python3.
-Under Windows, recall to build inside the Visual C++ native command build environment.
-Note that the ``build/python/z3`` directory should be accessible from where python is used with Z3 
-and it depends on ``libz3.dll`` to be in the path.
-
-```bash
-virtualenv venv
-source venv/bin/activate
-python scripts/mk_make.py --python
-cd build
-make
-make install
-# You will find Z3 and the Python bindings installed in the virtual environment
-venv/bin/z3 -h
-...
-python -c 'import z3; print(z3.get_version_string())'
-...
-```
-
-See [``examples/python``](examples/python) for examples.
-
-### ``Julia``
-
-The Julia package [Z3.jl](https://github.com/ahumenberger/Z3.jl) wraps the C++ API of Z3. Information about updating and building the Julia bindings can be found in [src/api/julia](src/api/julia).
-
-### ``Web Assembly`` / ``TypeScript`` / ``JavaScript``
-
-A WebAssembly build with associated TypeScript typings is published on npm as [z3-solver](https://www.npmjs.com/package/z3-solver). Information about building these bindings can be found in [src/api/js](src/api/js).
-
-### Smalltalk (``Pharo`` / ``Smalltalk/X``)
-
-Project [MachineArithmetic](https://github.com/shingarov/MachineArithmetic) provides Smalltalk interface
-to Z3's C API. For more information, see [MachineArithmetic/README.md](https://github.com/shingarov/MachineArithmetic/blob/pure-z3/MachineArithmetic/README.md)
-
-## System Overview
-
-![System Diagram](https://github.com/Z3Prover/doc/blob/master/programmingz3/images/Z3Overall.jpg)
-
-## Interfaces
-
-* Default input format is [SMTLIB2](http://smtlib.cs.uiowa.edu)
-
-* Other native foreign function interfaces:
-* [C++ API](https://z3prover.github.io/api/html/group__cppapi.html)
-* [.NET API](https://z3prover.github.io/api/html/namespace_microsoft_1_1_z3.html)
-* [Java API](https://z3prover.github.io/api/html/namespacecom_1_1microsoft_1_1z3.html)
-* [Python API](https://z3prover.github.io/api/html/namespacez3py.html) (also available in [pydoc format](https://z3prover.github.io/api/html/z3.html))
-* C
-* OCaml
-* [Julia](https://github.com/ahumenberger/Z3.jl)
-* [Smalltalk](https://github.com/shingarov/MachineArithmetic/blob/pure-z3/MachineArithmetic/README.md) (supports Pharo and Smalltalk/X)
-
-
+# NetSMT: Guided-SMT solving
+This project is a prototype implementation of the guided-SMT solving part of [NetSMT]():
+> Xing Fang, Feiyan Ding, Bang Huang, Ziyi Wang, Gao Han, Rulan Yang, Lizhao You, Qiao Xiang, 
+Linghe Kong, Yutong Liu, Jiwu Shu. "Network Can Help Check Itself: Accelerating SMT-based Network 
+Configuration Verification Using Network Domain Knowledge", INFOCOM'24
+
+
+## Introduction
+This project builds upon the [Z3 Theorem Prover](https://github.com/Z3Prover/z3) v4.12.2. 
+Our modifications aim to use network domain knowledge to guide the variable and assignment exploration
+order of the SMT solving process.
+### Variable Exploration Order Guidelines
+1. All branching variables are prior to other variables.
+2. Branching variables whose residing router is closer to the destination are explored first.
+3. For branching variables residing in the same router, we order them based on their corresponding route announcement type.
+
+### Assignment Exploration Order Guidelines
+1. For branching variables, we prefer the value assignment that is consistent with operating intent.
+2. For branching variables that reside in the suspicious error routers, we prefer the assignment that is contrary to operating intent.
+
+
+## Setup
+### Compile
+ please refer to the [Z3 build instructions](./README-Z3.md).
+
+### Debug
+We use Visual Studio for both development and debugging. For detailed instructions
+on setting up and configuring the environment, please refer to
+[Z3's CMake build system](./README-CMake.md).
+
+Once you have finished setting up Visual Studio.
+you can use the following steps to start debugging:  
+
+1. Open the solution and locate the `shell` project.
+2. Right-click and `Set as StartUp Project`.
+3. Set parameters in `Debug` -> `Shell Properties` -> `Debugging` -> `Command Arguments`. For example,
+`guided="false" dst="barcelona" dst_port="GigabitEthernet0/0" prop_type=0 network_type=0 topology="path\topology"
+smt.arith.solver=2 -st path\file.smt2`. Below are the detailed descriptions of each parameter used in the command arguments:
+    - **guided**: whether to enable exploration order guidelines. If false, the solver will behave like the original Z3.
+    - **dst**: sepcify the prefix origination node.
+    - **dst_port**: sepcify the prefix origination port.
+    - **prop_type**: 0: reachability; 1:isolation; 2:forwarding
+    - **network_type**:  0: wan; 1:fattree
+    - **topology**: path to network topology file 
+    - **smt.arith.solver**: we use 2 because the old arithmetic core is faster for network verification problems.
+   Discussion can be found [here](https://github.com/Z3Prover/z3/issues/6740).
+    - **-st**: show detail output
+    - **path\file.smt2**: path to SMT2 file
+
+4. Start debugging with `Local Windows Debugger`.
+
+
+## Code Modification
+All codes that we have modified are encapsulated within `ADD_BEGIN` and `ADD_END` markers.
+Below, we provide an overview of the functionalities introduced by these modifications.
+- **util/graph.cpp/.h**: store topology and compute the distance from nodes to the destination.
+- **util/gparams.cpp**: reset topology data when solving different topologies at one time.
+- **util/env_params.cpp**: register command arguments.
+- **smt/smt_internalizer.h**: initialize the variabe and assignment order.
+- **smt/smt_case_split_queue.cpp**: determine the next variable to explore.
+- **smt/smt_context.cpp**: determine the next assignment to explore.
+- **smt/smt_context.h**: functions used to initialize and determine exploration order.
+
+
+### Contact
+
+- Xing Fang (xing.fang.xmu@outlook.com)
