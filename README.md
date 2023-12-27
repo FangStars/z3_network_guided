@@ -62,6 +62,6 @@ Below, we provide an overview of the functionalities introduced by these modific
 - **smt/smt_context.h**: functions used to initialize and determine exploration order.
 
 
-### Contact
+## Contact
 
 - Xing Fang (xing.fang.xmu@outlook.com)
