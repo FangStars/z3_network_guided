@@ -604,7 +604,7 @@ void gparams::reset() {
     g_graph.clear();
     g_is_queued = false;
     g_is_init = false;
-    std::cout << "reset" << std::endl;
+    //std::cout << "reset" << std::endl;
     // ADD_END
 }
 

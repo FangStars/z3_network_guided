@@ -1071,7 +1071,7 @@ namespace smt {
                 g_graph.BFS(gparams::get_value("dst"));
                 g_is_queued = true;
                 endTime = clock();
-                std::cout << "Graph init Time : " << (double)(endTime - startTime) << "ms" << std::endl;
+                //std::cout << "Graph init Time : " << (double)(endTime - startTime) << "ms" << std::endl;
             }
             g_is_smtfile_init = true;
             if (n->get_kind() == AST_APP) {
