@@ -1,5 +1,5 @@
 # NetSMT: Guided-SMT solving
-This project is a prototype implementation of the guided-SMT solving part of [NetSMT]():
+This project is a prototype implementation of the guided-SMT solving part of [NetSMT](https://sngroup.org.cn/work/pdf/NetSMT-INFOCOM24.pdf):
 > Xing Fang, Feiyan Ding, Bang Huang, Ziyi Wang, Gao Han, Rulan Yang, Lizhao You, Qiao Xiang, 
 Linghe Kong, Yutong Liu, Jiwu Shu. "Network Can Help Check Itself: Accelerating SMT-based Network 
 Configuration Verification Using Network Domain Knowledge", INFOCOM'24
