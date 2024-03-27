@@ -121,7 +121,7 @@ namespace {
             phase = l_undef;
             
             // ADD_BEGIN
-            if ( gparams::get_value("guided") == "true")
+            if ( gparams::get_value("order") == "true")
             {
                 while (m_context.has_unguided_var()) {
                     if (!m_context.is_sorted)

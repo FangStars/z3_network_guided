@@ -1059,7 +1059,7 @@ namespace smt {
         TRACE("mk_var_bug", tout << "mk_bool: " << v << "\n";);  
 
         // ADD_BEGIN
-        if (gparams::get_value("guided") == "true")
+        if (gparams::get_value("order") == "true" || gparams::get_value("assign") == "true")
         {
             if (!g_is_queued && g_is_smtfile_init) {
                 clock_t startTime, endTime;
@@ -1081,21 +1081,6 @@ namespace smt {
                 if (is_literal) {
                     add_variable(v, var_name);
                 }
-                //else {
-                //    if (var_name == "bit2bool" )
-                //    {
-                //        int idx = to_app(n)->get_parameter(0).get_int();
-                //        vector<std::string> theory_varibales = parse_theory_variable(n);
-                //        if (theory_varibales.contains("0_dst-ip")) {
-                //            std::string bit2bool_name = var_name + std::to_string(idx);
-                //            m_dstip_var_map[idx] = v;
-                //            if (has_dstip_var == false) {
-                //                has_dstip_var = true;
-                //            }
-                //            add_variable(v, bit2bool_name);
-                //        }
-                //    }
-                //}
             }
 
         }

@@ -152,13 +152,7 @@ double Graph::getDistanceToOrigin(const std::string& node, const std::string& po
     double res;
     
     if (gparams::get_value("dst_port") != "" && node == gparams::get_value("dst") && port == gparams::get_value("dst_port")) {
-        if (gparams::get_value("network_type") == "0" && (varName.find("DATA-FORWARDING") != std::string::npos 
-            || varName.find("CONTROL-FORWARDING") != std::string::npos) ) {
-            return 0.2;
-        }
-        else {
-            return 0.1;
-        }
+        return 0.1;
     }
 
     try {

@@ -1888,8 +1888,8 @@ namespace smt {
         bool_var original_choice = var;
 
         // ADD_BEGIN
-        if (gparams::get_value("guided") == "true" && gparams::get_value("prop_type") == "1") {
-            if (m_item_index < m_item_array.size()) {
+        if (gparams::get_value("assign") == "true") {
+            if (m_assginment_map.count(var) > 0) {
                 if (m_assginment_map[var] == false) {
                     l.neg();
                 }
@@ -4210,7 +4210,7 @@ namespace smt {
             //}
             std::cout << "level " << new_lvl << " " << conflict_lvl << " current level" << m_item_index << std::endl << std::endl;
 #endif
-            if (gparams::get_value("guided") == "true") {
+            if (gparams::get_value("order") == "true") {
                 m_item_index = (has_dstip_var && (new_lvl <= 31)) ? 0 : new_lvl;
                 //std::cout << m_item_index <<"\t" << new_lvl << std::endl;
             }

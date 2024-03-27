@@ -35,18 +35,19 @@ you can use the following steps to start debugging:
 1. Open the solution and locate the `shell` project.
 2. Right-click and `Set as StartUp Project`.
 3. Set parameters in `Debug` -> `Shell Properties` -> `Debugging` -> `Command Arguments`. For example,
-`guided="false" dst="barcelona" dst_port="GigabitEthernet0/0" prop_type=0 network_type=0 topology="path\topology"
+`order="true" assign="true" dst="barcelona" dst_port="GigabitEthernet0/0" topology="path\topology"
 smt.arith.solver=2 -st path\file.smt2`. Below are the detailed descriptions of each parameter used in the command arguments:
-    - **guided:** whether to enable exploration order guidelines. If false, the solver will behave like the original Z3.
+    - **order:** whether to enable variable exploration order guidelines. 
+    - **assign:** whether to enable assignment exploration order guidelines. 
     - **dst:** sepcify the prefix origination node.
     - **dst_port:** sepcify the prefix origination port.
-    - **prop_type:** 0: reachability; 1:isolation; 2:forwarding
-    - **network_type:**  0: wan; 1:fattree
     - **topology:** path to network topology file 
     - **smt.arith.solver:** we use 2 because the old arithmetic core is faster for network verification problems.
    Discussion can be found [here](https://github.com/Z3Prover/z3/issues/6740).
     - **-st**: show detail output
     - **path\file.smt2:** path to SMT2 file
+
+    If arguments **order** and **assign** are both false, the solver will behave like the original Z3.
 
 4. Start running or debugging with `Local Windows Debugger`.
 
